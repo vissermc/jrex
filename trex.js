@@ -66,23 +66,24 @@ Trex ({or:[{any:1}, {}],flags:'gim'}).all('345')
 function TrexObj(regex) {
 	this._regex = regex;
 }
-TrexObj.prototype.iter = function(str, func, funcBetween) {
+TrexObj.prototype.iter = function(str, func) {
 	var result;
-	var fRes;
 	var curPos=0;
+	var prevResult;
 	while ((result = this._regex.exec(str)) !== null) {
-		if (result.index != curPos) {
-			fRes = funcBetween.call(this,str.substring(curPos,result.index),curPos, false); 
-			if (typeof fRes != 'undefined')
-                return fRes;
-		}
-		curPos = result.lastIndex;
-		fRes = func.call(this,result[0], result.index, result.slice(1)); 
-		if (typeof fRes != 'undefined')
-                return fRes;
+		result.trailIndex = curPos;
+		result.trailText = str.substring(curPos,result.index);
+		if (prevResult) {
+			var fRes = func.call(this,prevResult); 
+			if (typeof fRes !== 'undefined')
+	                return fRes;
+        }
+		prevResult = result;
 	}
-	if (curPos != str.length) {
-		return funcBetween.call(this, str.substring(curPos),curPos, true); 
+	if (prevResult) {
+		result.remainderIndex = curPos;
+		result.remainderText = str.substring(curPos);
+		return func.call(this,prevResult); 
 	}
 }
 
