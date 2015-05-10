@@ -8,13 +8,13 @@ regexp functions:
 		search: It returns the index of the match, or -1 if the search fails
 		filter
 		first, last
-		replace
+		formaatx`
 	end functions
 		eval(strng, startPos)
 		NOT: exec	A RegExp method that executes a search for a match in a string. It returns an array of information.
 		test(strng, startPos)	if there is at least one hit (give error on using map/captures/first/last/search).
 		NOT: search	A String method that tests for a match in a string. It returns the index of the match, or -1 if the search fails.
-		NOT: replace	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+		replace(strng, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
 		split(strng, startPos)	give error on map/captures/search
 	flags: returns flags
 
@@ -22,7 +22,8 @@ result struct functions: index(), text(optional capture index or name), capture(
 
 
 Trex(..).map((r)=>r.text).eval('sdfsd')
-Trex(..).filter(r=>r.text!='').replace(r=>'x'+r.text+'y').first().eval('dsfsdfsd')
+Trex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
+Trex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
 ----
 
 properties: store, min, max, begin, end, lazy,ahead, in, out
@@ -78,16 +79,19 @@ Trex ({or:[{any:1}, {}],flags:'gim'}).all('345')
 
 (function(export) {
 
-function TrexObj(regex) {
-	this._regex = regex;
+function TrexObj(tree) {
+    this._regex = tree instanceof RegExp ?
+		new RegExp(tree) :
+		new RegExp(Trex.construct(tree),tree.flags); 
+	}
 }
+
 TrexObj.prototype.iter = function(str, func, firstPos) {
 	var result;
 	var curPos=0;
 	var prevResult;
-	var flags = (this._regex + "").replace(/[\s\S]+\//, "");
-	
-	var re = new RegExp(this._regex.source, );
+	var flags = this.flags();
+	var re = new RegExp(this._regex.source, 'g'+flags.replace('g',''));
 	while ((result = re.exec(str)) !== null) {
 		result.trailIndex = curPos;
 		result.trailText = str.substring(curPos,result.index);
@@ -105,12 +109,14 @@ TrexObj.prototype.iter = function(str, func, firstPos) {
 	}
 }
 
-export.Trex = function(tree) {
-    if (tree instanceof RegExp)
-		return new RegExp(tree);
-	var sortedFlags = tree.flags.split('').sort().join('');
-	return new RegExp(Trex.construct(tree),sortedFlags); 
+TrexObj.prototype.flags = function() {
+    return (this._regex + "").replace(/.+\//, "");
 }
+
+TrexObj.prototype.regex = function() {
+    return new RegExp(this._regex);
+}
+
 Trex.escapeRegExp = function(string){
   return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
@@ -209,6 +215,10 @@ Trex.constructLoop = function(node,re) {
             re += '?';
 	}
 	return re;
+}
+
+export.Trex = function(tree) {
+	return new TrexObj(tree);
 }
 
 Test.add('trex',function() {
