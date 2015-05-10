@@ -1,13 +1,28 @@
 /*
 NEW:
+always use global!
+regexp functions:
+	chain funcs
+		map
+		captures: it returns the captures
+		search: It returns the index of the match, or -1 if the search fails
+		filter
+		first, last
+		replace
+	end functions
+		eval(strng, startPos)
+		NOT: exec	A RegExp method that executes a search for a match in a string. It returns an array of information.
+		test(strng, startPos)	if there is at least one hit (give error on using map/captures/first/last/search).
+		NOT: search	A String method that tests for a match in a string. It returns the index of the match, or -1 if the search fails.
+		NOT: replace	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+		split(strng, startPos)	give error on map/captures/search
+	flags: returns flags
 
-struct: text,captures,index,before,remainder (only applies to last of last() or all())
-(r)=>{}
-lazy functions: map, filter,replace
-evaluators: first, all, last
+result struct functions: index(), text(optional capture index or name), capture(index of name): {index:..., text:...}, captures(), input(), setNextSearch,remainder(), between(), before()
 
-Trex(..).map(r=>r.text).all()
-Trex(..).filter(r=>r.text!='').replace(r=>'x'+r.text+'y').first()
+
+Trex(..).map((r)=>r.text).eval('sdfsd')
+Trex(..).filter(r=>r.text!='').replace(r=>'x'+r.text+'y').first().eval('dsfsdfsd')
 ----
 
 properties: store, min, max, begin, end, lazy,ahead, in, out
@@ -66,11 +81,14 @@ Trex ({or:[{any:1}, {}],flags:'gim'}).all('345')
 function TrexObj(regex) {
 	this._regex = regex;
 }
-TrexObj.prototype.iter = function(str, func) {
+TrexObj.prototype.iter = function(str, func, firstPos) {
 	var result;
 	var curPos=0;
 	var prevResult;
-	while ((result = this._regex.exec(str)) !== null) {
+	var flags = (this._regex + "").replace(/[\s\S]+\//, "");
+	
+	var re = new RegExp(this._regex.source, );
+	while ((result = re.exec(str)) !== null) {
 		result.trailIndex = curPos;
 		result.trailText = str.substring(curPos,result.index);
 		if (prevResult) {
