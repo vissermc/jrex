@@ -60,15 +60,15 @@ begin:true, end:true, flags, min, max
 module TrexModule {
 
 class TrexObj {
-	contructor(private _regex: RegExp) {
+	private _regexG: RegExp;
+	constructor(private _regex: RegExp) {
+		this._regexG = new RegExp(this._regex.source, 'g'+this.flags().replace('g',''));
 	}
 	private iter(str, func, firstPos) {
 		var result;
 		var curPos=0;
 		var prevResult;
-		var flags = this.flags();
-		var re = new RegExp(this._regex.source, 'g'+flags.replace('g',''));
-		while ((result = re.exec(str)) !== null) {
+		while ((result = this._regexG.exec(str)) !== null) {
 			result.trailIndex = curPos;
 			result.trailText = str.substring(curPos,result.index);
 			if (prevResult) {
@@ -89,8 +89,8 @@ class TrexObj {
         return (this.regex + "").replace(/.+\//, "");
 	}
 
-	public regex()  {
-        return new RegExp(this._regex);
+	public regex(): RegExp  {
+        return new RegExp(this._regex.source, this.flags());
     }
 }
 
@@ -103,7 +103,7 @@ class RegexBuilder {
 		if (typeof node === 'string') {
 			return this.escapeRegExp(node);
 		} else if (typeof node === 'object' && typeof node.length === 'number') {
-			return _.map(node, function (i) {
+			return node.map(function (i) {
 					return this.encloseForConcat(this.construct(i));
 				}).join('');
 		} else if (node instanceof RegExp) {
@@ -140,14 +140,14 @@ class RegexBuilder {
 	
 	private getPrimaryProperty(node) {
 		var primProp;
-		_.reduce(['or','text','regex','sub','any','in','out'], function(memo,i) {
-			var avail = node[i]!=null;
+		['or','text','regex','sub','any','in','out'].forEach( (prop)=>{
+			var avail = node[prop]!=null;
 			if (avail) {
 				if (primProp != null)
-				throw('expected only one primary property');
-				primProp = i;
+					throw('expected only one primary property');
+				primProp = prop;
 			}
-		}, 0);
+		});
 		return primProp;
 	}
 
@@ -156,7 +156,7 @@ class RegexBuilder {
 		var val = node[primProp];
 		switch(primProp) {
 		case 'or':
-			return _.map(val, function (i) {
+			return val.map((i) => {
 				return this.enclose(this.construct(i));
 			}).join('|');
 		case 'text':
@@ -179,7 +179,7 @@ class RegexBuilder {
 		case 'sub':
 			return this.construct(val);
 		}
-	};
+	}
 	
 	private constructLoop(node,re) {
 		if (node.lazy || node.min != null || node.max != null || node.exact!=null) {
@@ -203,19 +203,27 @@ class RegexBuilder {
 	}
 }
 
+export function Trex(tree: any, flags?: string): any {
+	var regex = tree instanceof RegExp ?
+		new RegExp(tree,flags) :
+		new RegExp(new RegexBuilder().construct(tree),flags || tree.flags); 
+	return new TrexObj(regex);
+}  
+
 }
 
-function Trex(tree) {
-    var regex = tree instanceof RegExp ?
-		new RegExp(tree) :
-		new RegExp(new RegexBuilder().construct(tree),tree.flags); 
-	}
-	return new TrexObj(regex);
+interface Window {
+	Trex (tree: any, flags?: string): any;
 }
+
+window.Trex = TrexModule.Trex;
+
+declare var Test;
+declare var assert_equal;
 
 Test.add('trex',function() {
 	function test(expectedRegex, tree,text) {
-		assert_equal(expectedRegex,Trex(tree).regex(),text);
+		assert_equal(expectedRegex,window.Trex(tree).regex(),text);
 	}
 	test(/./g, /./g,'untreated regex');
 	test(/./, {regex:/./g},'regex stripped of flags');
