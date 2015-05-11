@@ -1,4 +1,6 @@
 /*
+Composable, iterable, lazy, Immutable
+
 NEW:
 always use global!
 regexp functions:
@@ -8,14 +10,14 @@ regexp functions:
 		search: It returns the index of the match, or -1 if the search fails
 		filter
 		first, last
-		formaatx`
+		format
 	end functions
-		eval(strng, startPos)
+		eval(text, startPos)
+		test(text, startPos)	if there is at least one hit (give error on using map/captures/first/last/search,format).
+		replace(text, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+		split(text, startPos)	give error on map/captures/search/format
 		NOT: exec	A RegExp method that executes a search for a match in a string. It returns an array of information.
-		test(strng, startPos)	if there is at least one hit (give error on using map/captures/first/last/search).
 		NOT: search	A String method that tests for a match in a string. It returns the index of the match, or -1 if the search fails.
-		replace(strng, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
-		split(strng, startPos)	give error on map/captures/search
 	flags: returns flags
 
 result struct functions: index(), text(optional capture index or name), capture(index of name): {index:..., text:...}, captures(), input(), setNextSearch,remainder(), between(), before()
@@ -59,15 +61,55 @@ begin:true, end:true, flags, min, max
 
 module TrexModule {
 
-class TrexObj {
-	private _regexG: RegExp;
-	constructor(private _regex: RegExp) {
-		this._regexG = new RegExp(this._regex.source, 'g'+this.flags().replace('g',''));
+class TrexNode {
+	TrexNode(private _parent: TrexNode, private _func: function) {}
+    public test(text: string, startPos?: int) {
+    }
+	public map(func: _func): TrexNode {
+		return new TrexNode(this, func);
 	}
-	private iter(str, func, firstPos) {
+	public captures(): TrexNode {
+		return map((r)=>r.captures);
+	}
+	public indices(): TrexNode {
+		return map((r)=>r.index);
+	}
+	public filter(): TrexNode {
+	}
+	public first(): TrexNode {
+	}
+	public last(): TrexNode {
+	}
+	public format(): TrexNode {
+	}
+	public eval(text, startPos: int): any[] {
+	}
+	public test(text, startPos?: int): boolean {	//if there is at least one hit (give error on using map/captures/first/last/search,format).
+	}
+	public replace(text, startPos?: int): string {	//A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+	}
+	public split(text, startPos?: int): string[] {	//give error on map/captures/search/format
+	}
+}
+
+class TrexResult {
+	public remainderIndex() {
+	}
+	public remainderText() {
+		str.substring(remainderIndex)
+	}
+}
+
+class TrexObj: TrexChain {
+	constructor(private _regex: RegExp) {
+		this._flagsG = 'g'+this.flags().replace('g','');
+	}
+	private iter(str: string, func: function, startPos?: int) {
 		var result;
 		var curPos=0;
 		var prevResult;
+		var regex = new RegExp(this._regex.source, this._flagsG);
+		regex.lastIndex = startPos || 0;
 		while ((result = this._regexG.exec(str)) !== null) {
 			result.trailIndex = curPos;
 			result.trailText = str.substring(curPos,result.index);
@@ -79,16 +121,15 @@ class TrexObj {
 			prevResult = result;
 		}
 		if (prevResult) {
-			result.remainderIndex = curPos;
-			result.remainderText = str.substring(curPos);
+			result.isLast = true;
+			//result.remainderIndex = curPos;
+			//result.remainderText = str.substring(curPos);
 			return func.call(this,prevResult); 
 		}
 	}
-
 	public flags() {
         return (this.regex + "").replace(/.+\//, "");
 	}
-
 	public regex(): RegExp  {
         return new RegExp(this._regex.source, this.flags());
     }
