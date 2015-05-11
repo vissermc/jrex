@@ -58,7 +58,11 @@ begin:true, end:true, flags, min, max
 [/^/,'--',{store:{in:'0-9',min:0}]
 
 */
+/*
+implementation:
 
+Trex(...).filter(r=>r.text().length>3).last()
+*/
 module TrexModule {
 
 class TrexNode {
@@ -93,10 +97,25 @@ class TrexNode {
 }
 
 class TrexResult {
-	public remainderIndex() {
+	public remainder() {
+		str.substring(this.endIndex());
 	}
-	public remainderText() {
-		str.substring(remainderIndex)
+	public between() {
+	}
+	public before() {
+	}
+	public isLast() { return this._isLast; }
+	public endIndex() {
+		return this.index() + this.text().length;
+	}
+	public index() {
+	}
+	public text(key?) {
+	}
+	public capture(key?): {index,text} {
+	}
+	public setNextSearch()
+	public captures() {
 	}
 }
 
