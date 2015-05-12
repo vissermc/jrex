@@ -65,12 +65,19 @@ Trex(...).filter(r=>r.text().length>3).last()
 */
 module TrexModule {
 
+
+todo: first/last must happen after last filter, but before any map after filter
+
 class TrexNode {
 	TrexNode(private _parent: TrexNode, private _func: function) {}
     public test(text: string, startPos?: int) {
     }
 	public map(func: _func): TrexNode {
-		return new TrexNode(this, func);
+		return new TrexNode(this, (nextFunc)=>(
+				(r)=> {
+					return func(r) ? nextFunc(r) : undefined;
+				}
+			);
 	}
 	public captures(): TrexNode {
 		return map((r)=>r.captures);
@@ -78,11 +85,34 @@ class TrexNode {
 	public indices(): TrexNode {
 		return map((r)=>r.index);
 	}
-	public filter(): TrexNode {
+	public filter(func): TrexNode {
+		return new TrexNode(this,
+			(nextFunc)=>(
+				(r)=> (
+					func(r) ? nextFunc(r) : undefined
+				)
+			);
+		);
 	}
 	public first(): TrexNode {
+		return new TrexNode(this,
+			(nextFunc)=>(
+				(r)=> {
+					nextFunc(r);
+					return true;
+				}
+			);
+		);
 	}
 	public last(): TrexNode {
+		return new TrexNode(this,
+			(nextFunc)=>(
+				(r)=> {
+					nextFunc(r);
+					return true;
+				}
+			);
+		);
 	}
 	public format(): TrexNode {
 	}
@@ -145,6 +175,20 @@ class TrexObj: TrexChain {
 			//result.remainderText = str.substring(curPos);
 			return func.call(this,prevResult); 
 		}
+	}
+	private first(str: string, transformFunc: function, execFunc: function, startPos?: int) {
+		this.iter(str, (r)=> { execFunc(transformFunc(r)); return true; }, startPos);
+	}
+	private last(str: string, transformFunc: function, execFunc: function, startPos?: int) {
+		var cur;
+		var found = false;
+		this.iter(str, (r)=> { found = true; cur = transformFunc(r); }, startPos);
+		if (found) {
+			execFunc(cur);
+		}
+	}
+	private all(str: string, transformFunc: function, execFunc: function, startPos?: int) {
+		this.iter(str, (r)=> { execFunc(transformFunc(r));  }, startPos);
 	}
 	public flags() {
         return (this.regex + "").replace(/.+\//, "");
