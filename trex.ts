@@ -73,11 +73,11 @@ class TrexNode {
     public test(text: string, startPos?: int) {
     }
 	public map(func: _func): TrexNode {
-		return new TrexNode(this, (nextFunc)=>(
-				(r)=> {
-					return func(r) ? nextFunc(r) : undefined;
-				}
-			);
+		return new TrexNode(this, 
+			(iter,sub)=>iter(
+				(r)=> sub(func(r))
+			)
+		);
 	}
 	public captures(): TrexNode {
 		return map((r)=>r.captures);
@@ -87,18 +87,18 @@ class TrexNode {
 	}
 	public filter(func): TrexNode {
 		return new TrexNode(this,
-			(nextFunc)=>(
+			(iter,sub)=>iter(
 				(r)=> (
-					func(r) ? nextFunc(r) : undefined
+					func(r) ? sub(r) : undefined
 				)
 			);
 		);
 	}
 	public first(): TrexNode {
 		return new TrexNode(this,
-			(nextFunc)=>(
+			(iter,sub)=>iter(
 				(r)=> {
-					nextFunc(r);
+					sub(r);
 					return true;
 				}
 			);
@@ -106,12 +106,16 @@ class TrexNode {
 	}
 	public last(): TrexNode {
 		return new TrexNode(this,
-			(nextFunc)=>(
-				(r)=> {
-					nextFunc(r);
-					return true;
-				}
-			);
+			(iter,sub)=>{
+				var cur;
+				var found = false;
+				iter((r)=>{
+					cur=r;
+					found=true;
+				});
+				if (found) {
+					sub(r);
+			}
 		);
 	}
 	public format(): TrexNode {
@@ -156,35 +160,14 @@ class TrexObj: TrexChain {
 	private iter(str: string, func: function, startPos?: int) {
 		var result;
 		var curPos=0;
-		var prevResult;
 		var regex = new RegExp(this._regex.source, this._flagsG);
 		regex.lastIndex = startPos || 0;
 		while ((result = this._regexG.exec(str)) !== null) {
 			result.trailIndex = curPos;
 			result.trailText = str.substring(curPos,result.index);
-			if (prevResult) {
-				var fRes = func.call(this,prevResult); 
-				if (typeof fRes !== 'undefined')
-		                return fRes;
-	        }
-			prevResult = result;
-		}
-		if (prevResult) {
-			result.isLast = true;
-			//result.remainderIndex = curPos;
-			//result.remainderText = str.substring(curPos);
-			return func.call(this,prevResult); 
-		}
-	}
-	private first(str: string, transformFunc: function, execFunc: function, startPos?: int) {
-		this.iter(str, (r)=> { execFunc(transformFunc(r)); return true; }, startPos);
-	}
-	private last(str: string, transformFunc: function, execFunc: function, startPos?: int) {
-		var cur;
-		var found = false;
-		this.iter(str, (r)=> { found = true; cur = transformFunc(r); }, startPos);
-		if (found) {
-			execFunc(cur);
+			var fRes = func.call(this,result); 
+			if (typeof fRes !== 'undefined')
+	                return fRes;
 		}
 	}
 	private all(str: string, transformFunc: function, execFunc: function, startPos?: int) {
