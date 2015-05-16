@@ -191,7 +191,7 @@ class TrexObj extends TrexNode {
 		}
 	}
 	flags() {
-        return (this.regex + "").replace(/.+\//, "");
+        return (this._regex + "").replace(/.+\//, "");
 	}
 	regex(): RegExp  {
         return new RegExp(this._regex.source, this.flags());
@@ -207,7 +207,7 @@ class RegexBuilder {
 		if (typeof node === 'string') {
 			return this.escapeRegExp(node);
 		} else if (typeof node === 'object' && typeof node.length === 'number') {
-			return node.map(function (i) {
+			return node.map((i)=> {
 					return this.encloseForConcat(this.construct(i));
 				}).join('');
 		} else if (node instanceof RegExp) {
@@ -329,7 +329,7 @@ Test.add('trex',function() {
 	function test(expectedRegex, tree,text) {
 		assert_equal(expectedRegex,window.Trex(tree).regex(),text);
 	}
-	test(/./g, /./g,'untreated regex');
+	test(/./g, /./g,'untreated regex'); 
 	test(/./, {regex:/./g},'regex stripped of flags');
 	test(/./gi, {regex:'.',flags:'gi'},'flags');
 	test(/./gi, {regex:'.',flags:'ig'},'sorting of flags'); 

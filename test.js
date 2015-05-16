@@ -50,9 +50,11 @@ Test = {
 		Test.tests[name] = func;
 	},
 	run: function() {
-		_.each(Test.tests,function(func,name) {
-			console.log("Executing: "+name);
-			func.call();
-		});
+		for(var prop in Test.tests) {
+			if (Test.tests.hasOwnProperty(prop)) {
+				console.log("Executing: "+prop);
+				Test.tests[prop].call();
+			}
+		}
 	}
 };
