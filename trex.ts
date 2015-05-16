@@ -69,38 +69,36 @@ Trex(...).filter(r=>r.text().length>3).map(...).last()
 */
 module TrexModule {
 
-
-todo: first/last must happen after last filter, but before any map after filter
-
 class TrexNode {
-	TrexNode(private _parent: TrexNode, private _iter: function) {}
-    public test(text: string, startPos?: int) {
-    }
-	public map(func: function): TrexNode {
+	constructor(private _parent?: TrexNode, private _iter?: (params,sub)=>any) {}
+	getIter(): (params,sub)=>any {
+		return this._iter;
+	}
+	map(func: (any)=>any): TrexNode {
 		var iter = this._iter;
 		return new TrexNode(this, 
 			(params,sub)=>iter(params,sub((r)=>func(r)))
 		);
 	}
-	public captures(): TrexNode {
-		return map((r)=>r.captures());
+	captures(): TrexNode {
+		return this.map((r)=>r.captures());
 	}
-	public indices(): TrexNode {
-		return map((r)=>r.index());
+	indices(): TrexNode {
+		return this.map((r)=>r.index());
 	}
-	public filter(func): TrexNode {
+	filter(func): TrexNode {
 		var iter = this._iter;
 		return new TrexNode(this,
 			(params,sub)=>iter(params, (r)=> (func(r) ? sub(r) : undefined) )
 		);
 	}
-	public first(): TrexNode {
+	first(): TrexNode {
 		var iter = this._iter;
 		return new TrexNode(this,
-			(params,sub)=>iter(params,(r)=> { sub(r); return true;} }
+			(params,sub)=>iter(params,(r)=> { sub(r); return true;})
 		);
 	}
-	public last(): TrexNode {
+	last(): TrexNode {
 		var iter = this._iter;
 		return new TrexNode(this,
 			(params,sub)=>{
@@ -111,88 +109,91 @@ class TrexNode {
 					found=true;
 				});
 				if (found) {
-					sub(r);
+					sub(cur);
 				}
-			}}
+			}
 		);
 	}
-	public format(fmt: string): TrexNode {
+	format(fmt: string): TrexNode {
 		//todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
 		//
+		return this.map((r)=>fmt);//todo
 	}
-	public eval(text, startPos: int): any[] {
+	eval(text: string, startPos: number ): any[] {
 		var res=[];
-		this._func({text:text, startPos: startPos}, (r)=>{
+		this._iter({text:text, startPos: startPos}, (r)=>{
 			res.push(r);
-		}
+		});
 		return res;
 	}
-	public test(text, startPos?: int): boolean {	//if there is at least one hit (give error on using map/captures/first/last/search,format).
+	test(text: string, startPos?: number ): boolean {	//if there is at least one hit (give error on using map/captures/first/last/search,format).
+		return false; //todo
 	}
-	public replace(text, startPos?: int): string {	//A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+	replace(text: string, startPos?: number ): string {	//A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+		return text;//todo
 	}
-	public split(text, startPos?: int): string[] {	//give error on map/captures/search/format
+	split(text: string, startPos?: number ): string[] {	//give error on map/captures/search/format
+		return [text];//
 	}
 }
 
 class TrexResult {
-	constructor(private _regex: RegExp, private _result, private _prevPos: int) {
+	constructor(private _regex: RegExp, private _result, private _prevPos: number ) {
 	}
-	public remainder() {
-		str.substring(this.endIndex());
+	remainder() {
+		this.input().substring(this.endIndex());
 	}
-	public between() {
-		return str.substring(this._prevPos, this.index());
+	between() {
+		return this.input().substring(this._prevPos, this.index());
 	}
-	public before() {
-		return str.substring(0, this.index());
+	before() {
+		return this.input().substring(0, this.index());
 	}
-	public endIndex() {
+	endIndex() {
 		return this.index() + this.text().length;
 	}
-	public index() {
-		return _result.index;
+	index() {
+		return this._result.index;
 	}
-	public input() {
-		return _result.input;
+	input() {
+		return this._result.input;
 	}
-	public text(key?) {
-		return key==null ? _result[0] : _result[key-1];
+	text(key?) {
+		return this._result[key==null ? 0 : key - 1];
 	}
-	public setNextSearch(pos: int) {
+	setNextSearch(pos: number ) {
 		this._regex.lastIndex = pos;
 	}
-	public captures() {
-		return _result.split(1);
+	captures() {
+		return this._result.split(1);
 	}
 }
 
-class TrexObj: TrexChain {
-	constructor(private _regex: RegExp): super(getIter()) {
-		this._flagsG = 'g'+this.flags().replace('g','');
+class TrexObj extends TrexNode {
+    _flagsGlobal: string;
+	constructor(private _regex: RegExp) {
+		super();
+		this._flagsGlobal = 'g'+this.flags().replace('g','');
 	}
-	private getIter() {
-		return (params,sub)=>iter(params.text, sub, params.startPos);
+	getIter() {
+		return (params,sub)=>this.iter(params.text, sub, params.startPos);
 	}
-	private iter(str: string, func: function, startPos?: int) {
+	private iter(text: string, func: (result: TrexResult)=>any, startPos?: number ) {
 		var result;
 		var curPos=0;
-		var regex = new RegExp(this._regex.source, this._flagsG);
+		var regex = new RegExp(this._regex.source, this._flagsGlobal);
 		regex.lastIndex = startPos || 0;
-		while ((result = regex.exec(str)) !== null) {
+		while ((result = regex.exec(text)) !== null) {
 			var tr = new TrexResult(regex, result, curPos);
 			var fRes = func.call(this,tr); 
 			if (typeof fRes !== 'undefined')
 	                return fRes;
 		}
 	}
-	private all(str: string, transformFunc: function, execFunc: function, startPos?: int) {
-		this.iter(str, (r)=> { execFunc(transformFunc(r));  }, startPos);
-	}
-	public flags() {
+	flags() {
         return (this.regex + "").replace(/.+\//, "");
 	}
-	public regex(): RegExp  {
+	regex(): RegExp  {
         return new RegExp(this._regex.source, this.flags());
     }
 }
@@ -202,7 +203,7 @@ class RegexBuilder {
 	constructor() {
 	}
 	
-	public construct(node) {
+	construct(node) {
 		if (typeof node === 'string') {
 			return this.escapeRegExp(node);
 		} else if (typeof node === 'object' && typeof node.length === 'number') {
