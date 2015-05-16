@@ -1,6 +1,9 @@
 /*
 Composable, iterable, lazy, Immutable
 
+TODO:
+	each, while
+	filter op results moet results aanpassen
 NEW:
 always use global!
 regexp functions:
@@ -26,6 +29,7 @@ result struct functions: index(), text(optional capture index or name), capture(
 Trex(..).map((r)=>r.text).eval('sdfsd')
 Trex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
 Trex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
+Trex(..).each((r)=>{...}).eval('sdfsd')
 ----
 
 properties: store, min, max, begin, end, lazy,ahead, in, out
@@ -61,7 +65,7 @@ begin:true, end:true, flags, min, max
 /*
 implementation:
 
-Trex(...).filter(r=>r.text().length>3).last()
+Trex(...).filter(r=>r.text().length>3).map(...).last()
 */
 module TrexModule {
 
@@ -69,58 +73,59 @@ module TrexModule {
 todo: first/last must happen after last filter, but before any map after filter
 
 class TrexNode {
-	TrexNode(private _parent: TrexNode, private _func: function) {}
+	TrexNode(private _parent: TrexNode, private _iter: function) {}
     public test(text: string, startPos?: int) {
     }
-	public map(func: _func): TrexNode {
+	public map(func: function): TrexNode {
+		var iter = this._iter;
 		return new TrexNode(this, 
-			(iter,sub)=>iter(
-				(r)=> sub(func(r))
-			)
+			(params,sub)=>iter(params,sub((r)=>func(r)))
 		);
 	}
 	public captures(): TrexNode {
-		return map((r)=>r.captures);
+		return map((r)=>r.captures());
 	}
 	public indices(): TrexNode {
-		return map((r)=>r.index);
+		return map((r)=>r.index());
 	}
 	public filter(func): TrexNode {
+		var iter = this._iter;
 		return new TrexNode(this,
-			(iter,sub)=>iter(
-				(r)=> (
-					func(r) ? sub(r) : undefined
-				)
-			);
+			(params,sub)=>iter(params, (r)=> (func(r) ? sub(r) : undefined) )
 		);
 	}
 	public first(): TrexNode {
+		var iter = this._iter;
 		return new TrexNode(this,
-			(iter,sub)=>iter(
-				(r)=> {
-					sub(r);
-					return true;
-				}
-			);
+			(params,sub)=>iter(params,(r)=> { sub(r); return true;} }
 		);
 	}
 	public last(): TrexNode {
+		var iter = this._iter;
 		return new TrexNode(this,
-			(iter,sub)=>{
+			(params,sub)=>{
 				var cur;
 				var found = false;
-				iter((r)=>{
+				iter(params,(r)=>{
 					cur=r;
 					found=true;
 				});
 				if (found) {
 					sub(r);
-			}
+				}
+			}}
 		);
 	}
-	public format(): TrexNode {
+	public format(fmt: string): TrexNode {
+		//todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
+		//
 	}
 	public eval(text, startPos: int): any[] {
+		var res=[];
+		this._func({text:text, startPos: startPos}, (r)=>{
+			res.push(r);
+		}
+		return res;
 	}
 	public test(text, startPos?: int): boolean {	//if there is at least one hit (give error on using map/captures/first/last/search,format).
 	}
@@ -131,41 +136,52 @@ class TrexNode {
 }
 
 class TrexResult {
+	constructor(private _regex: RegExp, private _result, private _prevPos: int) {
+	}
 	public remainder() {
 		str.substring(this.endIndex());
 	}
 	public between() {
+		return str.substring(this._prevPos, this.index());
 	}
 	public before() {
+		return str.substring(0, this.index());
 	}
-	public isLast() { return this._isLast; }
 	public endIndex() {
 		return this.index() + this.text().length;
 	}
 	public index() {
+		return _result.index;
+	}
+	public input() {
+		return _result.input;
 	}
 	public text(key?) {
+		return key==null ? _result[0] : _result[key-1];
 	}
-	public capture(key?): {index,text} {
+	public setNextSearch(pos: int) {
+		this._regex.lastIndex = pos;
 	}
-	public setNextSearch()
 	public captures() {
+		return _result.split(1);
 	}
 }
 
 class TrexObj: TrexChain {
-	constructor(private _regex: RegExp) {
+	constructor(private _regex: RegExp): super(getIter()) {
 		this._flagsG = 'g'+this.flags().replace('g','');
+	}
+	private getIter() {
+		return (params,sub)=>iter(params.text, sub, params.startPos);
 	}
 	private iter(str: string, func: function, startPos?: int) {
 		var result;
 		var curPos=0;
 		var regex = new RegExp(this._regex.source, this._flagsG);
 		regex.lastIndex = startPos || 0;
-		while ((result = this._regexG.exec(str)) !== null) {
-			result.trailIndex = curPos;
-			result.trailText = str.substring(curPos,result.index);
-			var fRes = func.call(this,result); 
+		while ((result = regex.exec(str)) !== null) {
+			var tr = new TrexResult(regex, result, curPos);
+			var fRes = func.call(this,tr); 
 			if (typeof fRes !== 'undefined')
 	                return fRes;
 		}
