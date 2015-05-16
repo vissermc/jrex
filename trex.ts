@@ -75,9 +75,9 @@ class TrexNode {
 		return this._iter;
 	}
 	map(func: (any)=>any): TrexNode {
-		var iter = this._iter;
+		var iter = this.getIter();
 		return new TrexNode(this, 
-			(params,sub)=>iter(params,sub((r)=>func(r)))
+			(params,sub)=>iter(params,(r)=>sub(func(r)))
 		);
 	}
 	captures(): TrexNode {
@@ -87,19 +87,19 @@ class TrexNode {
 		return this.map((r)=>r.index());
 	}
 	filter(func): TrexNode {
-		var iter = this._iter;
+		var iter = this.getIter();
 		return new TrexNode(this,
 			(params,sub)=>iter(params, (r)=> (func(r) ? sub(r) : undefined) )
 		);
 	}
 	first(): TrexNode {
-		var iter = this._iter;
+		var iter = this.getIter();
 		return new TrexNode(this,
 			(params,sub)=>iter(params,(r)=> { sub(r); return true;})
 		);
 	}
 	last(): TrexNode {
-		var iter = this._iter;
+		var iter = this.getIter();
 		return new TrexNode(this,
 			(params,sub)=>{
 				var cur;
@@ -111,6 +111,7 @@ class TrexNode {
 				if (found) {
 					sub(cur);
 				}
+				return true;
 			}
 		);
 	}
@@ -121,10 +122,10 @@ class TrexNode {
 	}
 	eval(text: string, startPos: number ): any[] {
 		var res=[];
-		this._iter({text:text, startPos: startPos}, (r)=>{
+		var isSingle = this.getIter()({text:text, startPos: startPos}, (r)=>{
 			res.push(r);
 		});
-		return res;
+		return isSingle ? res[0] : res;
 	}
 	test(text: string, startPos?: number ): boolean {	//if there is at least one hit (give error on using map/captures/first/last/search,format).
 		return false; //todo
@@ -167,6 +168,9 @@ class TrexResult {
 	captures() {
 		return this._result.split(1);
 	}
+	toJSON() {
+		return {index: this.index(), texts: this._result};
+	}
 }
 
 class TrexObj extends TrexNode {
@@ -175,14 +179,14 @@ class TrexObj extends TrexNode {
 		super();
 		this._flagsGlobal = 'g'+this.flags().replace('g','');
 	}
-	getIter() {
+	getIter(): (params,sub)=>any {
 		return (params,sub)=>this.iter(params.text, sub, params.startPos);
 	}
-	private iter(text: string, func: (result: TrexResult)=>any, startPos?: number ) {
+	private iter(text: string, func: (result: TrexResult)=>any, startPos?: number ): any {
 		var result;
 		var curPos=0;
 		var regex = new RegExp(this._regex.source, this._flagsGlobal);
-		regex.lastIndex = startPos || 0;
+		regex.lastIndex = startPos || 0; 
 		while ((result = regex.exec(text)) !== null) {
 			var tr = new TrexResult(regex, result, curPos);
 			var fRes = func.call(this,tr); 
@@ -321,47 +325,3 @@ interface Window {
 }
 
 window.Trex = TrexModule.Trex;
-
-declare var Test;
-declare var assert_equal;
-
-Test.add('trex',function() {
-	function test(expectedRegex, tree,text) {
-		assert_equal(expectedRegex,window.Trex(tree).regex(),text);
-	}
-	test(/./g, /./g,'untreated regex'); 
-	test(/./, {regex:/./g},'regex stripped of flags');
-	test(/./gi, {regex:'.',flags:'gi'},'flags');
-	test(/./gi, {regex:'.',flags:'ig'},'sorting of flags'); 
-	test(/.*/, {sub:/./,min:0},'infinite loop');
-	test(/.{3}/, {sub:/./,exact:3},'exact loop count');
-	test(/.{3}/, {sub:/./,min:3, max:3},'exact loop count using min and max');
-	test(/.{0,3}/, {sub:/./,max:3},'maximum loop only');
-	test(/.{3,}/, {sub:/./,min:3},'minimum loop only');
-	test(/.?/, {sub:/./,max:1},'optional');
-	test(/.??/, {sub:/./,max:1,lazy:true},'optional lazy');
-	test(/.*?/, {sub:/./,lazy:true},'infinite loop lazy');
-	test(/.*/, {regex:/./,min:0},'short way for looping');
-	test(/(?:ab)*/, {sub:/ab/,min:0},'enclosing');
-	test(/(abc)*/, {sub:/(abc)/,min:0},'no enclosing around brackets');
-	test(/(?:(ab)(c))*/, {sub:/(ab)(c)/, min:0},'no enclosing around brackets except in multiple parts');
-	test(/\./, '.','escaping text');
-	test(/\./, {text:'.'},'explicit escaping text');
-	test(/(?=.)/,{sub:/./, ahead:true},'ahead');
-	test(/(?!.)/,{sub:/./, ahead:'not'},'not ahead');
-	test(/(.)/,{sub:/./, store: true},'capture');
-	test(/abcdef/,['abc','def'],'concat');
-	test(/abcdef/i,{sub:['abc','def'],flags:'i'},'concat through sub');
-	test(/(?:a|b)def/,[/a|b/,'def'],'concat with enclosing paratheses when pipe is there');
-	test(/(?:abc)|(?:def)/i,{or:['abc','def'],flags:'i'},'or');
-	test(/(?:abc)|(?:def)/i,{or:['abc','def'],flags:'i'},'or');
-	test(/./, {any:true},'any true');
-	test(/./, {any:1},'any one');
-	test(/[a-z]/, {in:'a-z'},'in');
-	test(/[^a-z]/, {out:'a-z'},'out');
-	test(/.{2}/, {any:2},'any twice');
-	test(/(?:.{2}){3}/, {any:2, exact:3},'any twice three times');
-	test(/^./, {any:1,close:'start'},'begin');
-	test(/.$/, {any:1,close:'end'},'end');
-	test(/^.$/, {any:1,close:true},'begin and end');
-});
