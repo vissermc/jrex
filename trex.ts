@@ -83,6 +83,9 @@ class TrexNode {
 	captures(): TrexNode {
 		return this.map((r)=>r.captures());
 	}
+	text(index): TrexNode {
+		return this.map((r)=>r.text(index));
+	}
 	indices(): TrexNode {
 		return this.map((r)=>r.index());
 	}
@@ -118,7 +121,8 @@ class TrexNode {
 	format(fmt: string): TrexNode {
 		//todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
 		//
-		return this.map((r)=>fmt);//todo
+		var f = (res) => Trex(/(\\+)([0-9]+)/).filter(r=>(r.text(0).length%2)==1).map((r)=>res.text(parseInt(r.text()))).replace(fmt);
+		return this.map(f);
 	}
 	eval(text: string, startPos: number ): any[] {
 		var res=[];
@@ -128,24 +132,38 @@ class TrexNode {
 		return isSingle ? res[0] : res;
 	}
 	test(text: string, startPos?: number ): boolean {	//if there is at least one hit (give error on using map/captures/first/last/search,format).
-		return false; //todo
+		return this.getIter()({text:text, startPos: startPos}, (r)=>{
+			return true;
+		}) || false;
 	}
 	replace(text: string, startPos?: number ): string {	//A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
-		return text;//todo
+		var str='';
+		this.getIter()({text:text, startPos: startPos}, (r)=>{
+			str+='x'; //todo: cannot be implemented yet!!!
+		});
+		return str;
 	}
 	split(text: string, startPos?: number ): string[] {	//give error on map/captures/search/format
-		return [text];//
+		var res=[];
+		var cur;
+		this.getIter()({text:text, startPos: startPos}, (r)=>{
+			res.push(r.between());
+			cur = r;
+		});
+		if (cur)
+			res.push(r.after());
+		return res;
 	}
 }
 
 class TrexResult {
-	constructor(private _regex: RegExp, private _result, private _prevPos: number ) {
+	constructor(private _regex: RegExp, private _result, private _endOfPrevIndex: number ) {
 	}
-	remainder() {
+	after() {
 		this.input().substring(this.endIndex());
 	}
 	between() {
-		return this.input().substring(this._prevPos, this.index());
+		return this.input().substring(this._endOfPrevIndex, this.index());
 	}
 	before() {
 		return this.input().substring(0, this.index());
@@ -160,13 +178,13 @@ class TrexResult {
 		return this._result.input;
 	}
 	text(key?) {
-		return this._result[key==null ? 0 : key - 1];
+		return this._result[key==null ? 0 : key + 1];
 	}
 	setNextSearch(pos: number ) {
 		this._regex.lastIndex = pos;
 	}
 	captures() {
-		return this._result.split(1);
+		return this._result.slice(1);
 	}
 	toJSON() {
 		return {index: this.index(), texts: this._result};
@@ -184,11 +202,12 @@ class TrexObj extends TrexNode {
 	}
 	private iter(text: string, func: (result: TrexResult)=>any, startPos?: number ): any {
 		var result;
-		var curPos=0;
+		var endOfPrevIndex=0;
 		var regex = new RegExp(this._regex.source, this._flagsGlobal);
 		regex.lastIndex = startPos || 0; 
 		while ((result = regex.exec(text)) !== null) {
-			var tr = new TrexResult(regex, result, curPos);
+			var tr = new TrexResult(regex, result, endOfPrevIndex);
+			endOfPrevIndex = regex.lastIndex;
 			var fRes = func.call(this,tr); 
 			if (typeof fRes !== 'undefined')
 	                return fRes;

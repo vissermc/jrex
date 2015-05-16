@@ -66,6 +66,30 @@ Test.add('trex.first',function() {
         JSON.stringify(window.Trex(/a.*?e/).first().eval('abcdeaeabeabce')));
 });
 
+Test.add('trex.captures',function() {
+    assert_equal('[["bcd"],[""],["b"],["bc"]]',
+        JSON.stringify(window.Trex(/a(.*?)e/).captures().eval('abcdeaeabeabce')));
+});
+
+Test.add('trex.map(text)',function() {
+    assert_equal('"abcde"',
+        JSON.stringify(window.Trex(/a(.*?)e/).map(function(r) { return r.text();}).first().eval('abcdeaeabeabce')));
+});
+
+Test.add('trex.map(text(0))',function() {
+    assert_equal('"bcd"',
+        JSON.stringify(window.Trex(/a(.*?)e/).map(function(r) { return r.text(0);}).first().eval('abcdeaeabeabce')));
+});
+
+Test.add('trex.map(between)',function() {
+    assert_equal('["a","","b","cde","","f"]',
+        JSON.stringify(window.Trex(/!/).map(function(r) { return r.between();}).eval('a!!b!cde!!f!')));
+});
+
+Test.add('trex.indices',function() {
+    assert_equal('[0,5,7,10]',
+        JSON.stringify(window.Trex(/a(.*?)e/).indices().eval('abcdeaeabeabce')));
+});
 
 Test.add('trex.map.filter.first.map',function() {
     assert_equal('"m4"',
