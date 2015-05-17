@@ -1,0 +1,31 @@
+{
+  "name": "jrex",
+  "version": "1.0.0",
+  "description": "Modern Javascript library for composable, iterable, lazy, and immutable regular expressions",
+  "main": "jrex.js",
+  "scripts": {
+    "test": "node testjrex.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vissermc/jrex.git"
+  },
+  "keywords": [
+    "regular",
+    "expression",
+    "regex",
+    "regexp",
+    "javascript",
+    "library"
+  ],
+  "author": "Michiel Visser",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vissermc/jrex/issues"
+  },
+  "homepage": "https://github.com/vissermc/jrex",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-typescript": "^0.6.2"
+  }
+}

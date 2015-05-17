@@ -1,5 +1,5 @@
 /*
-Composable, iterable, lazy, Immutable
+	Composable, iterable, lazy, Immutable
 
 TODO:
 	each, while
@@ -26,10 +26,10 @@ regexp functions:
 result struct functions: index(), text(optional capture index or name), capture(index of name): {index:..., text:...}, captures(), input(), setNextSearch,remainder(), between(), before()
 
 
-Trex(..).map((r)=>r.text).eval('sdfsd')
-Trex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
-Trex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
-Trex(..).each((r)=>{...}).eval('sdfsd')
+jrex(..).map((r)=>r.text).eval('sdfsd')
+jrex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
+jrex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
+jrex(..).each((r)=>{...}).eval('sdfsd')
 ----
 
 properties: store, min, max, begin, end, lazy,ahead, in, out
@@ -65,45 +65,45 @@ begin:true, end:true, flags, min, max
 /*
 implementation:
 
-Trex(...).filter(r=>r.text().length>3).map(...).last()
+jrex(...).filter(r=>r.text().length>3).map(...).last()
 */
-module TrexModule {
+module jrexModule {
 
-class TrexNode {
-	constructor(private _parent?: TrexNode, private _iter?: (params,sub)=>any) {}
+class jrexNode {
+	constructor(private _parent?: jrexNode, private _iter?: (params,sub)=>any) {}
 	getIter(): (params,sub)=>any {
 		return this._iter;
 	}
-	map(func: (any)=>any): TrexNode {
+	map(func: (any)=>any): jrexNode {
 		var iter = this.getIter();
-		return new TrexNode(this, 
+		return new jrexNode(this, 
 			(params,sub)=>iter(params,(r)=>sub(func(r)))
 		);
 	}
-	captures(): TrexNode {
+	captures(): jrexNode {
 		return this.map((r)=>r.captures());
 	}
-	text(index): TrexNode {
+	text(index): jrexNode {
 		return this.map((r)=>r.text(index));
 	}
-	indices(): TrexNode {
+	indices(): jrexNode {
 		return this.map((r)=>r.index());
 	}
-	filter(func): TrexNode {
+	filter(func): jrexNode {
 		var iter = this.getIter();
-		return new TrexNode(this,
+		return new jrexNode(this,
 			(params,sub)=>iter(params, (r)=> (func(r) ? sub(r) : undefined) )
 		);
 	}
-	first(): TrexNode {
+	first(): jrexNode {
 		var iter = this.getIter();
-		return new TrexNode(this,
+		return new jrexNode(this,
 			(params,sub)=>iter(params,(r)=> { sub(r); return true;})
 		);
 	}
-	last(): TrexNode {
+	last(): jrexNode {
 		var iter = this.getIter();
-		return new TrexNode(this,
+		return new jrexNode(this,
 			(params,sub)=>{
 				var cur;
 				var found = false;
@@ -118,10 +118,10 @@ class TrexNode {
 			}
 		);
 	}
-	format(fmt: string): TrexNode {
+	format(fmt: string): jrexNode {
 		//todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
 		//
-		var f = (res) => Trex(/(\\+)([0-9]+)/).filter(r=>(r.text(0).length%2)==1).map((r)=>res.text(parseInt(r.text()))).replace(fmt);
+		var f = (res) => jrex(/(\\+)([0-9]+)/).filter(r=>(r.text(0).length%2)==1).map((r)=>res.text(parseInt(r.text()))).replace(fmt);
 		return this.map(f);
 	}
 	eval(text: string, startPos: number ): any[] {
@@ -151,12 +151,12 @@ class TrexNode {
 			cur = r;
 		});
 		if (cur)
-			res.push(r.after());
+			res.push(cur.after());
 		return res;
 	}
 }
 
-class TrexResult {
+class jrexResult {
 	constructor(private _regex: RegExp, private _result, private _endOfPrevIndex: number ) {
 	}
 	after() {
@@ -191,7 +191,7 @@ class TrexResult {
 	}
 }
 
-class TrexObj extends TrexNode {
+class jrexObj extends jrexNode {
     _flagsGlobal: string;
 	constructor(private _regex: RegExp) {
 		super();
@@ -200,13 +200,13 @@ class TrexObj extends TrexNode {
 	getIter(): (params,sub)=>any {
 		return (params,sub)=>this.iter(params.text, sub, params.startPos);
 	}
-	private iter(text: string, func: (result: TrexResult)=>any, startPos?: number ): any {
+	private iter(text: string, func: (result: jrexResult)=>any, startPos?: number ): any {
 		var result;
 		var endOfPrevIndex=0;
 		var regex = new RegExp(this._regex.source, this._flagsGlobal);
 		regex.lastIndex = startPos || 0; 
 		while ((result = regex.exec(text)) !== null) {
-			var tr = new TrexResult(regex, result, endOfPrevIndex);
+			var tr = new jrexResult(regex, result, endOfPrevIndex);
 			endOfPrevIndex = regex.lastIndex;
 			var fRes = func.call(this,tr); 
 			if (typeof fRes !== 'undefined')
@@ -330,17 +330,14 @@ class RegexBuilder {
 	}
 }
 
-export function Trex(tree: any, flags?: string): any {
+export function jrex(tree: any, flags?: string): any {
 	var regex = tree instanceof RegExp ?
 		new RegExp(tree,flags) :
 		new RegExp(new RegexBuilder().construct(tree),flags || tree.flags); 
-	return new TrexObj(regex);
+	return new jrexObj(regex);
 }  
 
 }
 
-interface Window {
-	Trex (tree: any, flags?: string): any;
-}
-
-window.Trex = TrexModule.Trex;
+declare var exports: any;
+exports.jrex = jrexModule.jrex;
