@@ -1,7 +1,7 @@
 var jrex = require('./jrex.js').jrex;
 var Test = require('./test.js').Test;
 var assert_equal = Test.assert_equal;
-Test.add('trex',function() {
+Test.add('jrex',function() {
 	function test(expectedRegex, tree,text) {
 		assert_equal(expectedRegex,jrex(tree).regex(),text);
 	}
@@ -42,59 +42,59 @@ Test.add('trex',function() {
 	test(/^.$/, {any:1,close:true},'begin and end');
 });
 
-Test.add('trex.eval',function() {
+Test.add('jrex.eval',function() {
     assert_equal([],jrex(/a(.*)e/).eval(''), 'zero results');
     assert_equal('[{"index":0,"texts":["abcde","bcd"]}]',JSON.stringify(jrex(/a(.*)e/).eval('abcde')),'one result');
     assert_equal('[{"index":0,"texts":["abcde","bcd"]},{"index":5,"texts":["ae",""]}]',JSON.stringify(jrex(/a(.*?)e/).eval('abcdeae')), 'two results');
 });
 
-Test.add('trex.filter',function() {
+Test.add('jrex.filter',function() {
     assert_equal('[{"index":0,"texts":["abcde"]},{"index":10,"texts":["abce"]}]',
         JSON.stringify(jrex(/a.*?e/).filter(function(r) { return r.text().length > 3; }).eval('abcdeaeabeabce')));
 });
 
-Test.add('trex.map',function() {
+Test.add('jrex.map',function() {
     assert_equal('[5,2,3,4]',
         JSON.stringify(jrex(/a.*?e/).map(function(r) { return r.text().length; }).eval('abcdeaeabeabce')));
 });
 
-Test.add('trex.last',function() {
+Test.add('jrex.last',function() {
     assert_equal('{"index":10,"texts":["abce"]}',
         JSON.stringify(jrex(/a.*?e/).last().eval('abcdeaeabeabce')));
 });
 
 
-Test.add('trex.first',function() {
+Test.add('jrex.first',function() {
     assert_equal('{"index":0,"texts":["abcde"]}',
         JSON.stringify(jrex(/a.*?e/).first().eval('abcdeaeabeabce')));
 });
 
-Test.add('trex.captures',function() {
+Test.add('jrex.captures',function() {
     assert_equal('[["bcd"],[""],["b"],["bc"]]',
         JSON.stringify(jrex(/a(.*?)e/).captures().eval('abcdeaeabeabce')));
 });
 
-Test.add('trex.map(text)',function() {
+Test.add('jrex.map(text)',function() {
     assert_equal('"abcde"',
         JSON.stringify(jrex(/a(.*?)e/).map(function(r) { return r.text();}).first().eval('abcdeaeabeabce')));
 });
 
-Test.add('trex.map(text(0))',function() {
+Test.add('jrex.map(text(0))',function() {
     assert_equal('"bcd"',
         JSON.stringify(jrex(/a(.*?)e/).map(function(r) { return r.text(0);}).first().eval('abcdeaeabeabce')));
 });
 
-Test.add('trex.map(between)',function() {
+Test.add('jrex.map(between)',function() {
     assert_equal('["a","","b","cde","","f"]',
         JSON.stringify(jrex(/!/).map(function(r) { return r.between();}).eval('a!!b!cde!!f!')));
 });
 
-Test.add('trex.indices',function() {
+Test.add('jrex.indices',function() {
     assert_equal('[0,5,7,10]',
         JSON.stringify(jrex(/a(.*?)e/).indices().eval('abcdeaeabeabce')));
 });
 
-Test.add('trex.map.filter.first.map',function() {
+Test.add('jrex.map.filter.first.map',function() {
     assert_equal('"m4"',
         JSON.stringify(jrex(/a.*?e/)
             .map(function(r) { return r.text().length; })
