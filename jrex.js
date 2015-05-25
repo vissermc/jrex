@@ -32,10 +32,10 @@ regexp functions:
 result struct functions: index(), text(optional capture index or name), capture(index of name): {index:..., text:...}, captures(), input(), setNextSearch,remainder(), between(), before()
 
 
-jrex(..).map((r)=>r.text).eval('sdfsd')
-jrex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
-jrex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
-jrex(..).each((r)=>{...}).eval('sdfsd')
+jRex(..).map((r)=>r.text).eval('sdfsd')
+jRex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
+jRex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
+jRex(..).each((r)=>{...}).eval('sdfsd')
 ----
 
 properties: store, min, max, begin, end, lazy,ahead, in, out
@@ -71,42 +71,42 @@ begin:true, end:true, flags, min, max
 /*
 implementation:
 
-jrex(...).filter(r=>r.text().length>3).map(...).last()
+jRex(...).filter(r=>r.text().length>3).map(...).last()
 */
-var jrexModule;
-(function (jrexModule) {
-    var jrexNode = (function () {
-        function jrexNode(_parent, _iter) {
+var jRexModule;
+(function (jRexModule) {
+    var jRexNode = (function () {
+        function jRexNode(_parent, _iter) {
             this._parent = _parent;
             this._iter = _iter;
         }
-        jrexNode.prototype.getIter = function () {
+        jRexNode.prototype.getIter = function () {
             return this._iter;
         };
-        jrexNode.prototype.map = function (func) {
+        jRexNode.prototype.map = function (func) {
             var iter = this.getIter();
-            return new jrexNode(this, function (params, sub) { return iter(params, function (r) { return sub(func(r)); }); });
+            return new jRexNode(this, function (params, sub) { return iter(params, function (r) { return sub(func(r)); }); });
         };
-        jrexNode.prototype.captures = function () {
+        jRexNode.prototype.captures = function () {
             return this.map(function (r) { return r.captures(); });
         };
-        jrexNode.prototype.text = function (index) {
+        jRexNode.prototype.text = function (index) {
             return this.map(function (r) { return r.text(index); });
         };
-        jrexNode.prototype.indices = function () {
+        jRexNode.prototype.indices = function () {
             return this.map(function (r) { return r.index(); });
         };
-        jrexNode.prototype.filter = function (func) {
+        jRexNode.prototype.filter = function (func) {
             var iter = this.getIter();
-            return new jrexNode(this, function (params, sub) { return iter(params, function (r) { return (func(r) ? sub(r) : undefined); }); });
+            return new jRexNode(this, function (params, sub) { return iter(params, function (r) { return (func(r) ? sub(r) : undefined); }); });
         };
-        jrexNode.prototype.first = function () {
+        jRexNode.prototype.first = function () {
             var iter = this.getIter();
-            return new jrexNode(this, function (params, sub) { return iter(params, function (r) { sub(r); return true; }); });
+            return new jRexNode(this, function (params, sub) { return iter(params, function (r) { sub(r); return true; }); });
         };
-        jrexNode.prototype.last = function () {
+        jRexNode.prototype.last = function () {
             var iter = this.getIter();
-            return new jrexNode(this, function (params, sub) {
+            return new jRexNode(this, function (params, sub) {
                 var cur;
                 var found = false;
                 iter(params, function (r) {
@@ -119,32 +119,31 @@ var jrexModule;
                 return true;
             });
         };
-        jrexNode.prototype.format = function (fmt) {
+        jRexNode.prototype.format = function (fmt) {
             //todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
-            //
-            var f = function (res) { return jrex(/(\\+)([0-9]+)/).filter(function (r) { return (r.text(0).length % 2) == 1; }).map(function (r) { return res.text(parseInt(r.text())); }).replace(fmt); };
+            var f = function (res) { return jRex(/(\\+)([0-9]+)/).filter(function (r) { return (r.text(0).length % 2) == 1; }).map(function (r) { return res.text(parseInt(r.text())); }).replace(fmt); };
             return this.map(f);
         };
-        jrexNode.prototype.eval = function (text, startPos) {
+        jRexNode.prototype.eval = function (text, startPos) {
             var res = [];
             var isSingle = this.getIter()({ text: text, startPos: startPos }, function (r) {
                 res.push(r);
             });
             return isSingle ? res[0] : res;
         };
-        jrexNode.prototype.test = function (text, startPos) {
+        jRexNode.prototype.test = function (text, startPos) {
             return this.getIter()({ text: text, startPos: startPos }, function (r) {
                 return true;
             }) || false;
         };
-        jrexNode.prototype.replace = function (text, startPos) {
+        jRexNode.prototype.replace = function (text, startPos) {
             var str = '';
             this.getIter()({ text: text, startPos: startPos }, function (r) {
                 str += 'x'; //todo: cannot be implemented yet!!!
             });
             return str;
         };
-        jrexNode.prototype.split = function (text, startPos) {
+        jRexNode.prototype.split = function (text, startPos) {
             var res = [];
             var cur;
             this.getIter()({ text: text, startPos: startPos }, function (r) {
@@ -155,78 +154,78 @@ var jrexModule;
                 res.push(cur.after());
             return res;
         };
-        return jrexNode;
+        return jRexNode;
     })();
-    var jrexResult = (function () {
-        function jrexResult(_regex, _result, _endOfPrevIndex) {
+    var jRexResult = (function () {
+        function jRexResult(_regex, _result, _endOfPrevIndex) {
             this._regex = _regex;
             this._result = _result;
             this._endOfPrevIndex = _endOfPrevIndex;
         }
-        jrexResult.prototype.after = function () {
+        jRexResult.prototype.after = function () {
             this.input().substring(this.endIndex());
         };
-        jrexResult.prototype.between = function () {
+        jRexResult.prototype.between = function () {
             return this.input().substring(this._endOfPrevIndex, this.index());
         };
-        jrexResult.prototype.before = function () {
+        jRexResult.prototype.before = function () {
             return this.input().substring(0, this.index());
         };
-        jrexResult.prototype.endIndex = function () {
+        jRexResult.prototype.endIndex = function () {
             return this.index() + this.text().length;
         };
-        jrexResult.prototype.index = function () {
+        jRexResult.prototype.index = function () {
             return this._result.index;
         };
-        jrexResult.prototype.input = function () {
+        jRexResult.prototype.input = function () {
             return this._result.input;
         };
-        jrexResult.prototype.text = function (key) {
+        jRexResult.prototype.text = function (key) {
             return this._result[key == null ? 0 : key + 1];
         };
-        jrexResult.prototype.setNextSearch = function (pos) {
+        jRexResult.prototype.setNextSearch = function (pos) {
             this._regex.lastIndex = pos;
         };
-        jrexResult.prototype.captures = function () {
+        jRexResult.prototype.captures = function () {
             return this._result.slice(1);
         };
-        jrexResult.prototype.toJSON = function () {
+        jRexResult.prototype.toJSON = function () {
             return { index: this.index(), texts: this._result };
         };
-        return jrexResult;
+        return jRexResult;
     })();
-    var jrexObj = (function (_super) {
-        __extends(jrexObj, _super);
-        function jrexObj(_regex) {
+    var jRexObj = (function (_super) {
+        __extends(jRexObj, _super);
+        function jRexObj(_regex) {
             _super.call(this);
             this._regex = _regex;
             this._flagsGlobal = 'g' + this.flags().replace('g', '');
         }
-        jrexObj.prototype.getIter = function () {
+        jRexObj.prototype.getIter = function () {
             var _this = this;
             return function (params, sub) { return _this.iter(params.text, sub, params.startPos); };
         };
-        jrexObj.prototype.iter = function (text, func, startPos) {
+        jRexObj.prototype.iter = function (text, func, startPos) {
             var result;
             var endOfPrevIndex = 0;
             var regex = new RegExp(this._regex.source, this._flagsGlobal);
             regex.lastIndex = startPos || 0;
             while ((result = regex.exec(text)) !== null) {
-                var tr = new jrexResult(regex, result, endOfPrevIndex);
+                var tr = new jRexResult(regex, result, endOfPrevIndex);
                 endOfPrevIndex = regex.lastIndex;
                 var fRes = func.call(this, tr);
                 if (typeof fRes !== 'undefined')
                     return fRes;
             }
         };
-        jrexObj.prototype.flags = function () {
+        jRexObj.prototype.flags = function () {
             return (this._regex + "").replace(/.+\//, "");
         };
-        jrexObj.prototype.regex = function () {
+        jRexObj.prototype.regex = function () {
             return new RegExp(this._regex.source, this.flags());
         };
-        return jrexObj;
-    })(jrexNode);
+        return jRexObj;
+    })(jRexNode);
     var RegexBuilder = (function () {
         function RegexBuilder() {
         }
@@ -331,12 +330,12 @@ var jrexModule;
         };
         return RegexBuilder;
     })();
-    function jrex(tree, flags) {
+    function jRex(tree, flags) {
         var regex = tree instanceof RegExp ?
             new RegExp(tree, flags) :
             new RegExp(new RegexBuilder().construct(tree), flags || tree.flags);
-        return new jrexObj(regex);
+        return new jRexObj(regex);
     }
-    jrexModule.jrex = jrex;
-})(jrexModule || (jrexModule = {}));
-exports.jrex = jrexModule.jrex;
+    jRexModule.jRex = jRex;
+})(jRexModule || (jRexModule = {}));
+exports.jRex = jRexModule.jRex;

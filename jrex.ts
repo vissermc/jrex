@@ -26,10 +26,10 @@ regexp functions:
 result struct functions: index(), text(optional capture index or name), capture(index of name): {index:..., text:...}, captures(), input(), setNextSearch,remainder(), between(), before()
 
 
-jrex(..).map((r)=>r.text).eval('sdfsd')
-jrex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
-jrex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
-jrex(..).each((r)=>{...}).eval('sdfsd')
+jRex(..).map((r)=>r.text).eval('sdfsd')
+jRex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
+jRex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
+jRex(..).each((r)=>{...}).eval('sdfsd')
 ----
 
 properties: store, min, max, begin, end, lazy,ahead, in, out
@@ -65,45 +65,45 @@ begin:true, end:true, flags, min, max
 /*
 implementation:
 
-jrex(...).filter(r=>r.text().length>3).map(...).last()
+jRex(...).filter(r=>r.text().length>3).map(...).last()
 */
-module jrexModule {
+module jRexModule {
 
-class jrexNode {
-	constructor(private _parent?: jrexNode, private _iter?: (params,sub)=>any) {}
+class jRexNode {
+	constructor(private _parent?: jRexNode, private _iter?: (params,sub)=>any) {}
 	getIter(): (params,sub)=>any {
 		return this._iter;
 	}
-	map(func: (any)=>any): jrexNode {
+	map(func: (any)=>any): jRexNode {
 		var iter = this.getIter();
-		return new jrexNode(this, 
+		return new jRexNode(this, 
 			(params,sub)=>iter(params,(r)=>sub(func(r)))
 		);
 	}
-	captures(): jrexNode {
+	captures(): jRexNode {
 		return this.map((r)=>r.captures());
 	}
-	text(index): jrexNode {
+	text(index): jRexNode {
 		return this.map((r)=>r.text(index));
 	}
-	indices(): jrexNode {
+	indices(): jRexNode {
 		return this.map((r)=>r.index());
 	}
-	filter(func): jrexNode {
+	filter(func): jRexNode {
 		var iter = this.getIter();
-		return new jrexNode(this,
+		return new jRexNode(this,
 			(params,sub)=>iter(params, (r)=> (func(r) ? sub(r) : undefined) )
 		);
 	}
-	first(): jrexNode {
+	first(): jRexNode {
 		var iter = this.getIter();
-		return new jrexNode(this,
+		return new jRexNode(this,
 			(params,sub)=>iter(params,(r)=> { sub(r); return true;})
 		);
 	}
-	last(): jrexNode {
+	last(): jRexNode {
 		var iter = this.getIter();
-		return new jrexNode(this,
+		return new jRexNode(this,
 			(params,sub)=>{
 				var cur;
 				var found = false;
@@ -118,10 +118,9 @@ class jrexNode {
 			}
 		);
 	}
-	format(fmt: string): jrexNode {
+	format(fmt: string): jRexNode {
 		//todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
-		//
-		var f = (res) => jrex(/(\\+)([0-9]+)/).filter(r=>(r.text(0).length%2)==1).map((r)=>res.text(parseInt(r.text()))).replace(fmt);
+		var f = (res) => jRex(/(\\+)([0-9]+)/).filter(r=>(r.text(0).length%2)==1).map((r)=>res.text(parseInt(r.text()))).replace(fmt);
 		return this.map(f);
 	}
 	eval(text: string, startPos: number ): any[] {
@@ -156,7 +155,7 @@ class jrexNode {
 	}
 }
 
-class jrexResult {
+class jRexResult {
 	constructor(private _regex: RegExp, private _result, private _endOfPrevIndex: number ) {
 	}
 	after() {
@@ -191,7 +190,7 @@ class jrexResult {
 	}
 }
 
-class jrexObj extends jrexNode {
+class jRexObj extends jRexNode {
     _flagsGlobal: string;
 	constructor(private _regex: RegExp) {
 		super();
@@ -200,13 +199,13 @@ class jrexObj extends jrexNode {
 	getIter(): (params,sub)=>any {
 		return (params,sub)=>this.iter(params.text, sub, params.startPos);
 	}
-	private iter(text: string, func: (result: jrexResult)=>any, startPos?: number ): any {
+	private iter(text: string, func: (result: jRexResult)=>any, startPos?: number ): any {
 		var result;
 		var endOfPrevIndex=0;
 		var regex = new RegExp(this._regex.source, this._flagsGlobal);
 		regex.lastIndex = startPos || 0; 
 		while ((result = regex.exec(text)) !== null) {
-			var tr = new jrexResult(regex, result, endOfPrevIndex);
+			var tr = new jRexResult(regex, result, endOfPrevIndex);
 			endOfPrevIndex = regex.lastIndex;
 			var fRes = func.call(this,tr); 
 			if (typeof fRes !== 'undefined')
@@ -330,14 +329,14 @@ class RegexBuilder {
 	}
 }
 
-export function jrex(tree: any, flags?: string): any {
+export function jRex(tree: any, flags?: string): any {
 	var regex = tree instanceof RegExp ?
 		new RegExp(tree,flags) :
 		new RegExp(new RegexBuilder().construct(tree),flags || tree.flags); 
-	return new jrexObj(regex);
+	return new jRexObj(regex);
 }  
 
 }
 
 declare var exports: any;
-exports.jrex = jrexModule.jrex;
+exports.jRex = jRexModule.jRex;
