@@ -1,10 +1,11 @@
-var jRex = require('./jRex.js').jRex;
+var jRex = require('./jrex.js');
 var assert = require('assert');
 
 describe('jRex',function() {
 	describe('builder', function() {
 		function test(expectedRegex, tree,text) {
-			assert.deepEqual(expectedRegex,jRex(tree).regex(),text);
+			var result = jRex(tree).regex();
+			assert.deepEqual(expectedRegex,result,text + ': ' + expectedRegex + ' != ' + result);
 		}
 		test(/./g, /./g,'untreated regex'); 
 		test(/./, {regex:/./g},'regex stripped of flags');
@@ -31,7 +32,7 @@ describe('jRex',function() {
 		test(/abcdef/i,{sub:['abc','def'],flags:'i'},'concat through sub');
 		test(/(?:a|b)def/,[/a|b/,'def'],'concat with enclosing paratheses when pipe is there');
 		test(/(?:abc)|(?:def)/i,{or:['abc','def'],flags:'i'},'or');
-		test(/(?:abc)|(?:def)/i,{or:['abc','def'],flags:'i'},'or');
+		test(/(?:(?:ab)|c)|(?:def)/i,{or:[{or:['ab','c']},'def'],flags:'i'},'or');
 		test(/./, {any:true},'any true');
 		test(/./, {any:1},'any one');
 		test(/[a-z]/, {in:'a-z'},'in');
@@ -41,6 +42,7 @@ describe('jRex',function() {
 		test(/^./, {any:1,close:'start'},'begin');
 		test(/.$/, {any:1,close:'end'},'end');
 		test(/^.$/, {any:1,close:true},'begin and end');
+		test(/(?:abc)|(?:def)/i,{or:[jRex('abc'),jRex('def')],flags:'i'},'or');
 	});
 
 	describe('#eval',function() {

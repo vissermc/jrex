@@ -338,5 +338,6 @@ export function jRex(tree: any, flags?: string): any {
 
 }
 
-declare var exports: any;
-exports.jRex = jRexModule.jRex;
+declare var exports: any, module: any;
+
+module.exports = exports = jRexModule.jRex;

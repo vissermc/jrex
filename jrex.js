@@ -338,4 +338,4 @@ var jRexModule;
     }
     jRexModule.jRex = jRex;
 })(jRexModule || (jRexModule = {}));
-exports.jRex = jRexModule.jRex;
+module.exports = exports = jRexModule.jRex;
