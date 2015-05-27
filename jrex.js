@@ -85,7 +85,7 @@ var jRexModule;
         };
         jRexNode.prototype.map = function (func) {
             var iter = this.getIter();
-            return new jRexNode(this, function (params, sub) { return iter(params, function (r) { return sub(func(r)); }); });
+            return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { return sub(func(r), orig); }); });
         };
         jRexNode.prototype.captures = function () {
             return this.map(function (r) { return r.captures(); });
@@ -98,23 +98,24 @@ var jRexModule;
         };
         jRexNode.prototype.filter = function (func) {
             var iter = this.getIter();
-            return new jRexNode(this, function (params, sub) { return iter(params, function (r) { return (func(r) ? sub(r) : undefined); }); });
+            return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { return (func(r) ? sub(r, orig) : undefined); }); });
         };
         jRexNode.prototype.first = function () {
             var iter = this.getIter();
-            return new jRexNode(this, function (params, sub) { return iter(params, function (r) { sub(r); return true; }); });
+            return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { sub(r, orig); return true; }); });
         };
         jRexNode.prototype.last = function () {
             var iter = this.getIter();
             return new jRexNode(this, function (params, sub) {
-                var cur;
+                var cur, curOrig;
                 var found = false;
-                iter(params, function (r) {
+                iter(params, function (r, orig) {
                     cur = r;
+                    curOrig = orig;
                     found = true;
                 });
                 if (found) {
-                    sub(cur);
+                    sub(cur, curOrig);
                 }
                 return true;
             });
@@ -138,10 +139,12 @@ var jRexModule;
         };
         jRexNode.prototype.replace = function (text, startPos) {
             var str = '';
-            this.getIter()({ text: text, startPos: startPos }, function (r) {
-                str += 'x'; //todo: cannot be implemented yet!!!
+            var last;
+            this.getIter()({ text: text, startPos: startPos }, function (r, orig) {
+                str += orig.between() + r;
+                last = orig;
             });
-            return str;
+            return last ? str + last.after() : text;
         };
         jRexNode.prototype.split = function (text, startPos) {
             var res = [];
@@ -213,7 +216,7 @@ var jRexModule;
             while ((result = regex.exec(text)) !== null) {
                 var tr = new jRexResult(regex, result, endOfPrevIndex);
                 endOfPrevIndex = regex.lastIndex;
-                var fRes = func.call(this, tr);
+                var fRes = func.call(this, tr, tr);
                 if (typeof fRes !== 'undefined')
                     return fRes;
             }
@@ -231,6 +234,9 @@ var jRexModule;
         }
         RegexBuilder.prototype.construct = function (node) {
             var _this = this;
+            if (node instanceof jRexObj) {
+                return node.regex().source;
+            }
             if (typeof node === 'string') {
                 return this.escapeRegExp(node);
             }
@@ -240,7 +246,7 @@ var jRexModule;
                 }).join('');
             }
             else if (node instanceof RegExp) {
-                return node.toString().replace(/\/(.*)\/[gim]*$/, '$1');
+                return node.source; //toString().replace(/\/(.*)\/[gim]*$/,'$1');
             }
             var re = this.constructPrimary(node);
             re = this.constructLoop(node, re);
@@ -333,7 +339,7 @@ var jRexModule;
     function jRex(tree, flags) {
         var regex = tree instanceof RegExp ?
             new RegExp(tree, flags) :
-            new RegExp(new RegexBuilder().construct(tree), flags || tree.flags);
+            new RegExp(new RegexBuilder().construct(tree), flags || (typeof tree.flags === 'function' ? tree.flags() : tree.flags));
         return new jRexObj(regex);
     }
     jRexModule.jRex = jRex;

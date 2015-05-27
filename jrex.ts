@@ -77,7 +77,7 @@ class jRexNode {
 	map(func: (any)=>any): jRexNode {
 		var iter = this.getIter();
 		return new jRexNode(this, 
-			(params,sub)=>iter(params,(r)=>sub(func(r)))
+			(params,sub)=>iter(params,(r,orig)=>sub(func(r),orig))
 		);
 	}
 	captures(): jRexNode {
@@ -92,27 +92,28 @@ class jRexNode {
 	filter(func): jRexNode {
 		var iter = this.getIter();
 		return new jRexNode(this,
-			(params,sub)=>iter(params, (r)=> (func(r) ? sub(r) : undefined) )
+			(params,sub)=>iter(params, (r, orig)=> (func(r) ? sub(r, orig) : undefined) )
 		);
 	}
 	first(): jRexNode {
 		var iter = this.getIter();
 		return new jRexNode(this,
-			(params,sub)=>iter(params,(r)=> { sub(r); return true;})
+			(params,sub)=>iter(params,(r, orig)=> { sub(r, orig); return true;})
 		);
 	}
 	last(): jRexNode {
 		var iter = this.getIter();
 		return new jRexNode(this,
 			(params,sub)=>{
-				var cur;
+				var cur, curOrig;
 				var found = false;
-				iter(params,(r)=>{
+				iter(params,(r, orig)=>{
 					cur=r;
+					curOrig = orig;
 					found=true;
 				});
 				if (found) {
-					sub(cur);
+					sub(cur, curOrig);
 				}
 				return true;
 			}
@@ -137,10 +138,12 @@ class jRexNode {
 	}
 	replace(text: string, startPos?: number ): string {	//A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
 		var str='';
-		this.getIter()({text:text, startPos: startPos}, (r)=>{
-			str+='x'; //todo: cannot be implemented yet!!!
+		var last;
+		this.getIter()({text:text, startPos: startPos}, (r, orig)=>{
+			str+=orig.between() + r;
+			last = orig;
 		});
-		return str;
+		return last ? str + last.after() : text;
 	}
 	split(text: string, startPos?: number ): string[] {	//give error on map/captures/search/format
 		var res=[];
@@ -199,7 +202,7 @@ class jRexObj extends jRexNode {
 	getIter(): (params,sub)=>any {
 		return (params,sub)=>this.iter(params.text, sub, params.startPos);
 	}
-	private iter(text: string, func: (result: jRexResult)=>any, startPos?: number ): any {
+	private iter(text: string, func: (result: jRexResult, origResult: jRexResult)=>any, startPos?: number ): any {
 		var result;
 		var endOfPrevIndex=0;
 		var regex = new RegExp(this._regex.source, this._flagsGlobal);
@@ -207,7 +210,7 @@ class jRexObj extends jRexNode {
 		while ((result = regex.exec(text)) !== null) {
 			var tr = new jRexResult(regex, result, endOfPrevIndex);
 			endOfPrevIndex = regex.lastIndex;
-			var fRes = func.call(this,tr); 
+			var fRes = func.call(this, tr, tr); 
 			if (typeof fRes !== 'undefined')
 	                return fRes;
 		}
@@ -226,6 +229,9 @@ class RegexBuilder {
 	}
 	
 	construct(node) {
+		if (node instanceof jRexObj) {
+			return node.regex().source;
+		}
 		if (typeof node === 'string') {
 			return this.escapeRegExp(node);
 		} else if (typeof node === 'object' && typeof node.length === 'number') {
@@ -233,7 +239,7 @@ class RegexBuilder {
 					return this.encloseForConcat(this.construct(i));
 				}).join('');
 		} else if (node instanceof RegExp) {
-			return node.toString().replace(/\/(.*)\/[gim]*$/,'$1');
+			return node.source;
 		}
 		var re = this.constructPrimary(node);
 		re = this.constructLoop(node,re);
@@ -332,7 +338,7 @@ class RegexBuilder {
 export function jRex(tree: any, flags?: string): any {
 	var regex = tree instanceof RegExp ?
 		new RegExp(tree,flags) :
-		new RegExp(new RegexBuilder().construct(tree),flags || tree.flags); 
+		new RegExp(new RegexBuilder().construct(tree),flags || ( typeof tree.flags === 'function' ? tree.flags() : tree.flags) ); 
 	return new jRexObj(regex);
 }  
 

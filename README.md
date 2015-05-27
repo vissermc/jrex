@@ -1,7 +1,7 @@
 # jrex
 Modern Javascript library for composable, iterable, lazy, and immutable regular expressions
 
-Example 1: iteration and chaining:
+Example 1: lazy iteration and chaining:
 
      jRex(/\w+/)
             .filter(function(r) { return r.text().length < 6; })

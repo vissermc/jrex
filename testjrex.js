@@ -8,6 +8,7 @@ describe('jRex',function() {
 			assert.deepEqual(expectedRegex,result,text + ': ' + expectedRegex + ' != ' + result);
 		}
 		test(/./g, /./g,'untreated regex'); 
+		test(/./g, jRex(/./g),'untreated sub jRex'); 
 		test(/./, {regex:/./g},'regex stripped of flags');
 		test(/./gi, {regex:'.',flags:'gi'},'flags');
 		test(/./gi, {regex:'.',flags:'ig'},'sorting of flags'); 
