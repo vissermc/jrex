@@ -100,6 +100,18 @@ var jRexModule;
             var iter = this.getIter();
             return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { return (func(r) ? sub(r, orig) : undefined); }); });
         };
+        jRexNode.prototype.while = function (func) {
+            var iter = this.getIter();
+            return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { return (func(r) ? sub(r, orig) : null); }); });
+        };
+        jRexNode.prototype.henceforth = function (func) {
+            var found;
+            return this.filter(function (r) { return (found || (found = func(r))); });
+        };
+        jRexNode.prototype.skip = function (count) {
+            var skip = count;
+            return this.filter(function (r) { return (skip < 0 || --skip < 0); });
+        };
         jRexNode.prototype.first = function () {
             var iter = this.getIter();
             return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { sub(r, orig); return true; }); });

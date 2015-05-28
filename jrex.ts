@@ -95,6 +95,20 @@ class jRexNode {
 			(params,sub)=>iter(params, (r, orig)=> (func(r) ? sub(r, orig) : undefined) )
 		);
 	}
+	while(func): jRexNode {
+		var iter = this.getIter();
+		return new jRexNode(this,
+			(params,sub)=>iter(params, (r, orig)=> (func(r) ? sub(r, orig) : null) )
+		);
+	}
+	henceforth(func): jRexNode {
+		var found;
+		return this.filter((r)=>(found || (found = func(r))));
+	}
+	skip(count: number): jRexNode {
+		var skip = count;
+		return this.filter((r)=>(skip < 0 || --skip<0));
+	}
 	first(): jRexNode {
 		var iter = this.getIter();
 		return new jRexNode(this,

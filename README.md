@@ -23,11 +23,11 @@ evaluates to:
 
 Example 3: text replace:
 
-    jRex(/([xyz])/).filter(function(r) { return r.index() % 2 == 0; }).format('<\1>').replace('playing my xylophone')
+    jRex(/([xyz])/).filter(function(r) { return r.index() % 2 == 0; }).format('<$1>').replace('playing my xylophone')
     
 evaluates to:
 
-TODO
+    pla<y>ing m<y> <x>ylophone
 
 API definition:
 
