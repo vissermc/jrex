@@ -121,8 +121,14 @@ var jRexModule;
             });
         };
         jRexNode.prototype.format = function (fmt) {
-            //todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
-            var f = function (res) { return jRex(/(\\+)([0-9]+)/).filter(function (r) { return (r.text(0).length % 2) == 1; }).map(function (r) { return res.text(parseInt(r.text())); }).replace(fmt); };
+            var f = function (res) { return jRex(/\$\$|\$&|\$([0-9]+)/).
+                map(function (r) {
+                switch (r.text()) {
+                    case '$$': return '$';
+                    case '$&': return res.text();
+                    default: return res.text(parseInt(r.text(0)) - 1);
+                }
+            }).replace(fmt); };
             return this.map(f);
         };
         jRexNode.prototype.eval = function (text, startPos) {
@@ -139,12 +145,12 @@ var jRexModule;
         };
         jRexNode.prototype.replace = function (text, startPos) {
             var str = '';
-            var last;
+            var index = 0;
             this.getIter()({ text: text, startPos: startPos }, function (r, orig) {
-                str += orig.between() + r;
-                last = orig;
+                str += text.substring(index, orig.index()) + r;
+                index = orig.endIndex();
             });
-            return last ? str + last.after() : text;
+            return str + text.substr(index);
         };
         jRexNode.prototype.split = function (text, startPos) {
             var res = [];
@@ -166,7 +172,7 @@ var jRexModule;
             this._endOfPrevIndex = _endOfPrevIndex;
         }
         jRexResult.prototype.after = function () {
-            this.input().substring(this.endIndex());
+            return this.input().substring(this.endIndex());
         };
         jRexResult.prototype.between = function () {
             return this.input().substring(this._endOfPrevIndex, this.index());
@@ -246,7 +252,7 @@ var jRexModule;
                 }).join('');
             }
             else if (node instanceof RegExp) {
-                return node.source; //toString().replace(/\/(.*)\/[gim]*$/,'$1');
+                return node.source;
             }
             var re = this.constructPrimary(node);
             re = this.constructLoop(node, re);

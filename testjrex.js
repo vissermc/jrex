@@ -66,7 +66,28 @@ describe('jRex',function() {
 	    assert.deepEqual('{"index":10,"texts":["abce"]}',
 	        JSON.stringify(jRex(/a.*?e/).last().eval('abcdeaeabeabce')));
 	});
+
+	describe('#replace',function() {
+	    assert.deepEqual('"aBcdBf"',
+	        JSON.stringify(jRex(/b/).map(function (r) { return "B"; }).replace('abcdbf')));
+	});	
+
+	describe('#replace.first',function() {
+	    assert.deepEqual('"aBcdbf"',
+	        JSON.stringify(jRex(/b/).map(function (r) { return "B"; }).first().replace('abcdbf')));
+	});	
 	
+	describe('#replace.last',function() {
+	    assert.deepEqual('"abcdBf"',
+	        JSON.stringify(jRex(/b/).map(function (r) { return "B"; }).last().replace('abcdbf')));
+	});	
+
+	describe('#format',function() {
+	    assert.deepEqual('["XcYaZ","XcYaZ"]',
+	        JSON.stringify(jRex(/(.).(.)/).format("X$2Y$1Z").eval('abcabc')));
+	    assert.deepEqual(["$1$$1$babc"],
+	        jRex(/a(b)c/).format("$$1$$$$1$$$1$&").eval('abc'));
+	});
 	
 	describe('#first',function() {
 	    assert.deepEqual('{"index":0,"texts":["abcde"]}',

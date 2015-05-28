@@ -120,8 +120,14 @@ class jRexNode {
 		);
 	}
 	format(fmt: string): jRexNode {
-		//todo: can we use replace if we: captures.join('').replace(/(.{10})(...{20})/,fmt);
-		var f = (res) => jRex(/(\\+)([0-9]+)/).filter(r=>(r.text(0).length%2)==1).map((r)=>res.text(parseInt(r.text()))).replace(fmt);
+		var f = (res) => jRex(/\$\$|\$&|\$([0-9]+)/).
+			map((r)=>{
+				switch(r.text()) {
+					case '$$': return '$';
+					case '$&': return res.text();
+					default:   return res.text(parseInt(r.text(0))-1);
+				}
+			}).replace(fmt);
 		return this.map(f);
 	}
 	eval(text: string, startPos: number ): any[] {
@@ -138,12 +144,12 @@ class jRexNode {
 	}
 	replace(text: string, startPos?: number ): string {	//A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
 		var str='';
-		var last;
+		var index = 0;
 		this.getIter()({text:text, startPos: startPos}, (r, orig)=>{
-			str+=orig.between() + r;
-			last = orig;
+			str+=text.substring(index,orig.index()) + r;
+			index = orig.endIndex();
 		});
-		return last ? str + last.after() : text;
+		return str + text.substr(index);
 	}
 	split(text: string, startPos?: number ): string[] {	//give error on map/captures/search/format
 		var res=[];
@@ -161,34 +167,34 @@ class jRexNode {
 class jRexResult {
 	constructor(private _regex: RegExp, private _result, private _endOfPrevIndex: number ) {
 	}
-	after() {
-		this.input().substring(this.endIndex());
+	after(): string {
+		return this.input().substring(this.endIndex());
 	}
-	between() {
+	between(): string {
 		return this.input().substring(this._endOfPrevIndex, this.index());
 	}
-	before() {
+	before(): string {
 		return this.input().substring(0, this.index());
 	}
-	endIndex() {
+	endIndex(): number {
 		return this.index() + this.text().length;
 	}
-	index() {
+	index(): number {
 		return this._result.index;
 	}
-	input() {
+	input(): string {
 		return this._result.input;
 	}
-	text(key?) {
+	text(key?): string {
 		return this._result[key==null ? 0 : key + 1];
 	}
-	setNextSearch(pos: number ) {
+	setNextSearch(pos: number): void {
 		this._regex.lastIndex = pos;
 	}
-	captures() {
+	captures(): number[] {
 		return this._result.slice(1);
 	}
-	toJSON() {
+	toJSON(): any {
 		return {index: this.index(), texts: this._result};
 	}
 }
