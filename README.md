@@ -1,4 +1,4 @@
-# jrex
+# jRex
 A modern Javascript library for composable, iterable, lazy, and immutable regular expressions.
 
 Example 1: lazy iteration and method chaining:
