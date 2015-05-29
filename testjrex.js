@@ -107,9 +107,9 @@ suite('jRex',function() {
 	        JSON.stringify(jRex(/a(.*?)e/).map(function(r) { return r.text();}).first().eval('abcdeaeabeabce')));
 	});
 	
-	test('#map(text(0))',function() {
+	test('#map(text(1))',function() {
 	    assert.deepEqual('"bcd"',
-	        JSON.stringify(jRex(/a(.*?)e/).map(function(r) { return r.text(0);}).first().eval('abcdeaeabeabce')));
+	        JSON.stringify(jRex(/a(.*?)e/).map(function(r) { return r.text(1);}).first().eval('abcdeaeabeabce')));
 	});
 	
 	test('#map(between)',function() {

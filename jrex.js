@@ -1,78 +1,39 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2015 vissermc
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+TODO:
+- test(text, startPos)	if there is at least one hit (give error on using map/captures/first/last/search,format).
+- replace(text, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+- split(text, startPos)	give error on map/captures/search/format
+*/
 var __extends = this.__extends || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     __.prototype = b.prototype;
     d.prototype = new __();
 };
-/*
-    Composable, iterable, lazy, Immutable
-
-TODO:
-    each, while
-    filter op results moet results aanpassen
-NEW:
-always use global!
-regexp functions:
-    chain funcs
-        map
-        captures: it returns the captures
-        search: It returns the index of the match, or -1 if the search fails
-        filter
-        first, last
-        format
-    end functions
-        eval(text, startPos)
-        test(text, startPos)	if there is at least one hit (give error on using map/captures/first/last/search,format).
-        replace(text, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
-        split(text, startPos)	give error on map/captures/search/format
-        NOT: exec	A RegExp method that executes a search for a match in a string. It returns an array of information.
-        NOT: search	A String method that tests for a match in a string. It returns the index of the match, or -1 if the search fails.
-    flags: returns flags
-
-result struct functions: index(), text(optional capture index or name), capture(index of name): {index:..., text:...}, captures(), input(), setNextSearch,remainder(), between(), before()
-
-
-jRex(..).map((r)=>r.text).eval('sdfsd')
-jRex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
-jRex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
-jRex(..).each((r)=>{...}).eval('sdfsd')
-----
-
-properties: store, min, max, begin, end, lazy,ahead, in, out
-
-/^([rgbycmld.])([0-9]?)(?:([rgbycmld.])([0-9]?))?$/
-
-var colorLetterStore = {in:'rgbycmld.',store:true};
-var optionalNumberStore = {in:'0-9',max:1,store:true};
-var color= { sub:[colorLetterStore,optionalNumberStore};
-
-{
-    sub:[
-        color,
-        { sub: color, max: 1},
-    ]
-    close: true,
-}
-
-{{store:{in:'rgbycmld.'}}}
-
-all properties:
-begin:true, end:true, flags, min, max
-{} or /./ is one single character
-
-
-
-/^--(=*)([0-9]*),?([0-9]*)((?:[rgbycmld.][0-9]?){0,2})$/
-
-{close:true, sub:['--',{store:{sub:'=',min:0},{store:{in:'0-9',min:0}]}
-[/^/,'--',{store:{in:'0-9',min:0}]
-
-*/
-/*
-implementation:
-
-jRex(...).filter(r=>r.text().length>3).map(...).last()
-*/
 var jRexModule;
 (function (jRexModule) {
     var jRexNode = (function () {
@@ -90,7 +51,7 @@ var jRexModule;
         jRexNode.prototype.captures = function () {
             return this.map(function (r) { return r.captures(); });
         };
-        jRexNode.prototype.text = function (index) {
+        jRexNode.prototype.texts = function (index) {
             return this.map(function (r) { return r.text(index); });
         };
         jRexNode.prototype.indices = function () {
@@ -138,7 +99,7 @@ var jRexModule;
                 switch (r.text()) {
                     case '$$': return '$';
                     case '$&': return res.text();
-                    default: return res.text(parseInt(r.text(0)) - 1);
+                    default: return res.text(parseInt(r.text(1)));
                 }
             }).replace(fmt); };
             return this.map(f);
@@ -202,7 +163,7 @@ var jRexModule;
             return this._result.input;
         };
         jRexResult.prototype.text = function (key) {
-            return this._result[key == null ? 0 : key + 1];
+            return this._result[key ? key : 0];
         };
         jRexResult.prototype.setNextSearch = function (pos) {
             this._regex.lastIndex = pos;
@@ -244,6 +205,9 @@ var jRexModule;
         };
         jRexObj.prototype.regex = function () {
             return new RegExp(this._regex.source, this.flags());
+        };
+        jRexObj.prototype.toJSON = function () {
+            return { regex: this._regex.source, flags: this.flags() }; // TODO: test
         };
         return jRexObj;
     })(jRexNode);

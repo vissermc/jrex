@@ -1,72 +1,34 @@
 /*
-	Composable, iterable, lazy, Immutable
+The MIT License (MIT)
 
-TODO:
-	each, while
-	filter op results moet results aanpassen
-NEW:
-always use global!
-regexp functions:
-	chain funcs
-		map
-		captures: it returns the captures
-		search: It returns the index of the match, or -1 if the search fails
-		filter
-		first, last
-		format
-	end functions
-		eval(text, startPos)
-		test(text, startPos)	if there is at least one hit (give error on using map/captures/first/last/search,format).
-		replace(text, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
-		split(text, startPos)	give error on map/captures/search/format
-		NOT: exec	A RegExp method that executes a search for a match in a string. It returns an array of information.
-		NOT: search	A String method that tests for a match in a string. It returns the index of the match, or -1 if the search fails.
-	flags: returns flags
+Copyright (c) 2015 vissermc
 
-result struct functions: index(), text(optional capture index or name), capture(index of name): {index:..., text:...}, captures(), input(), setNextSearch,remainder(), between(), before()
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-jRex(..).map((r)=>r.text).eval('sdfsd')
-jRex(..).filter(r=>r.text!='').map(r=>'x'+r.text+'y').first().replace('dsfsdfsd')
-jRex(..).filter(r=>r.text!='').template('\1hello').first().replace('dsfsdfsd')
-jRex(..).each((r)=>{...}).eval('sdfsd')
-----
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
-properties: store, min, max, begin, end, lazy,ahead, in, out
+-------------------------------------------------------------------------------
 
-/^([rgbycmld.])([0-9]?)(?:([rgbycmld.])([0-9]?))?$/
-
-var colorLetterStore = {in:'rgbycmld.',store:true};
-var optionalNumberStore = {in:'0-9',max:1,store:true};
-var color= { sub:[colorLetterStore,optionalNumberStore}; 
-
-{
-    sub:[
-		color,
-		{ sub: color, max: 1},
-	]
-	close: true,
-}
-
-{{store:{in:'rgbycmld.'}}}
-
-all properties:
-begin:true, end:true, flags, min, max
-{} or /./ is one single character
-
-
-
-/^--(=*)([0-9]*),?([0-9]*)((?:[rgbycmld.][0-9]?){0,2})$/
-
-{close:true, sub:['--',{store:{sub:'=',min:0},{store:{in:'0-9',min:0}]}
-[/^/,'--',{store:{in:'0-9',min:0}]
-
+TODO: 
+- test(text, startPos)	if there is at least one hit (give error on using map/captures/first/last/search,format).
+- replace(text, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
+- split(text, startPos)	give error on map/captures/search/format
 */
-/*
-implementation:
 
-jRex(...).filter(r=>r.text().length>3).map(...).last()
-*/
 module jRexModule {
 
 class jRexNode {
@@ -83,7 +45,7 @@ class jRexNode {
 	captures(): jRexNode {
 		return this.map((r)=>r.captures());
 	}
-	text(index): jRexNode {
+	texts(index): jRexNode {
 		return this.map((r)=>r.text(index));
 	}
 	indices(): jRexNode {
@@ -139,7 +101,7 @@ class jRexNode {
 				switch(r.text()) {
 					case '$$': return '$';
 					case '$&': return res.text();
-					default:   return res.text(parseInt(r.text(0))-1);
+					default:   return res.text(parseInt(r.text(1)));
 				}
 			}).replace(fmt);
 		return this.map(f);
@@ -199,8 +161,8 @@ class jRexResult {
 	input(): string {
 		return this._result.input;
 	}
-	text(key?): string {
-		return this._result[key==null ? 0 : key + 1];
+	text(key?: number): string {
+		return this._result[key ? key : 0 ];
 	}
 	setNextSearch(pos: number): void {
 		this._regex.lastIndex = pos;
@@ -241,6 +203,9 @@ class jRexObj extends jRexNode {
 	regex(): RegExp  {
         return new RegExp(this._regex.source, this.flags());
     }
+	toJSON(): any {
+		return { regex: this._regex.source, flags: this.flags() }; // TODO: test
+	}
 }
 
 class RegexBuilder {
