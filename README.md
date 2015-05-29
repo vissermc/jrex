@@ -42,7 +42,7 @@ Element
 -------
 Any element, including the root element being the first argument of jRex, is either a:
 
-- hash map of the form: {<primary field>: ..., <secondary field1>: ..., ....}
+- hash map of the form: {\<primary field>: ..., \<secondary field1>: ..., ...., \<secondary fieldN>: ...}
 - a string being treated as text. Therefore it is escaped within the regular expression.
 - an array of sub elements. The sub elements must sequentially match the input string.
 
@@ -68,8 +68,35 @@ Secondary fieds are:
 
 Chain functions
 ---------------
+These chain/cascading methods transform and filter the results:
+
+	map( func: (result)=>any ): 
+	 	it transforms the result as specified by the function.
+	captures(): 
+		it transforms the result to the information as specified by the result function 'captures'.
+	texts(key?: number): 
+		it transforms the result to the text as specified by the result function 'text'.
+	indices(): 
+		it transforms the result to the text as specified by the result function 'text'.
+	filter(func: (result)=>boolean): 
+		it filters outs all results for which the function evaluates to a falsy value.
+	while(func: (result)=>boolean): 
+		it includes results until the fuction evaluates to a falsy value.
+	henceforth(func: (result)=>boolean): 
+		it excludes results until the fuction evaluates to a truthy value.
+	skip(number): 
+		it excludes the first 'number' results.
+	first(), last(): 
+		it will return either the first or last result.
+	format(fmt: string): 
+		a string with special meaning for $&, $1...$nn, or $$. (See javascript replace function).
+
 When using these functions, it will always use the regular expression in 'global' mode.
+
+### Result
+
 As long as no mapping functions is applied, the supplied result argument is an object with the following functions:
+
 	after(): string
 		returns the complete text after the match.
 	between(): string
@@ -88,17 +115,6 @@ As long as no mapping functions is applied, the supplied result argument is an o
 		sets the character position of the next search.
 	captures(): number[] {
 		returns the information about the captures, excluding the information about the whole matched text.
-
-- map( func: (result)=>any ): it transforms the result as specified by the function.
-- captures(): it transforms the result to the information as specified by the result function 'captures'.
-- texts(key?: number): it transforms the result to the text as specified by the result function 'text'.
-- indices(): : it transforms the result to the text as specified by the result function 'text'.
-- filter(func: (result)=>boolean): it filters outs all results for which the function evaluates to a falsy value.
-- while(func: (result)=>boolean): it includes results until the fuction evaluates to a falsy value.
-- henceforth(func: (result)=>boolean): it excludes results until the fuction evaluates to a truthy value.
-- skip(number): it excludes the first 'number' results.
-- first(), last(): it will return either the first or last result.
-- format(fmt: string): a string with special meaning for $&, $1...$nn, or $$. (See javascript replace function).
 
 End functions
 -------------
