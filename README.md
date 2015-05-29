@@ -48,23 +48,23 @@ Any element, including the root element being the first argument of jRex, is eit
 
 Primary fields are:
 
-- or: an array of elements where any of the elements matches the input string.
-- text: any element is treated/converted to text, and handled as defined previously. 
-- regex: any element being either a regular expression, treated as such but stripped of its flags, or converted to text and parsed as a regular expression, without the slashes and the flags.
-- sub: any sub element 
-- any: any character
-- in: match any from a collection or ranges of characters, as defined by RegExp's [...] notation, where the brackets are omitted.
-- out: match everything except any from a collection or ranges of charactes, as define by RegExp's [^...], where the brackets and '~' are omitted.
+- *or*: an array of elements where any of the elements matches the input string.
+- *text*: any element is treated/converted to text, and handled as defined previously. 
+- *regex*: any element being either a regular expression, treated as such but stripped of its flags, or converted to text and parsed as a regular expression, without the slashes and the flags.
+- *sub*: any sub element 
+- *any*: any character
+- *in*: match any from a collection or ranges of characters, as defined by RegExp's [...] notation, where the brackets are omitted.
+- *out*: match everything except any from a collection or ranges of charactes, as define by RegExp's [^...], where the brackets and '~' are omitted.
 
 Secondary fieds are:
 
-- store: values: true. This will store the element, like /(...)/.
-- close: values: start|end|both. This will close the element, like /^...$/.
-- ahead: values: true|'not'. This will wrap the element like /(?=...)/ or not: /(?!...)/.
-- min: values: any number. This will enable repeat and define the minimal amount of repeats.
-- max: values: any number. This will enable repeat and define the maximum amount of repeats.
-- exact: values: any number. Equivalent to \{...min: value, max: value...\}
-- lazy: values: true. This will result in lazy parsing, like /.??/ or /.*?/.
+- *store*: values: true. This will store the element, like /(...)/.
+- *close*: values: start|end|both. This will close the element, like /^...$/.
+- *ahead*: values: true|'not'. This will wrap the element like /(?=...)/ or not: /(?!...)/.
+- *min*: values: any number. This will enable repeat and define the minimal amount of repeats.
+- *max*: values: any number. This will enable repeat and define the maximum amount of repeats.
+- *exact*: values: any number. Equivalent to \{...min: value, max: value...\}
+- *lazy*: values: true. This will result in lazy parsing, like /.??/ or /.*?/.
 
 Chain functions
 ---------------
