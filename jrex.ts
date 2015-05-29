@@ -106,7 +106,7 @@ class jRexNode {
 			}).replace(fmt);
 		return this.map(f);
 	}
-	eval(text: string, startPos: number ): any[] {
+	eval(text: string, startPos: number ): any {
 		var res=[];
 		var isSingle = this.getIter()({text:text, startPos: startPos}, (r)=>{
 			res.push(r);
@@ -197,7 +197,7 @@ class jRexObj extends jRexNode {
 	                return fRes;
 		}
 	}
-	flags() {
+	flags(): string {
         return (this._regex + "").replace(/.+\//, "");
 	}
 	regex(): RegExp  {

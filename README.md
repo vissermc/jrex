@@ -118,13 +118,24 @@ As long as no mapping functions is applied, the supplied result argument is an o
 
 End functions
 -------------
-- eval(text, startPos?): evaluates the result.
-- test(text, startPos?): return whether	if there is at least one result.
-- replace(text, startPos?): replaces the matches with strings.
-- split(text, startPos?): splits the function on matches that have not been filtered out.
+These functions will initiate the execution:
+
+	eval(text, startPos?): any
+		evaluates the result.
+	test(text, startPos?): boolean 
+		returns whether there is at least one result.
+	replace(text, startPos?): string
+		replaces the matches with strings.
+	split(text, startPos?): string[]
+		splits the function on matches that have not been filtered out.
 
 Getter functions
 -----------------
-flags(): returns the flags in one string.
-regex(): returns the regular expression.
-toJSON(): returns a json representation that can be fed back to jRex.
+These functions return information about the regular expression:
+
+	flags(): string
+		returns the flags in one string.
+	regex(): RegExp 
+		returns the regular expression.
+	toJSON(): any
+		returns a json representation that can be fed back to jRex.
