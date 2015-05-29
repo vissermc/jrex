@@ -9,11 +9,20 @@ grunt.initConfig({
         module: 'commonjs', //or amd 
       }
     }
+  },
+  uglify: {
+      base: {
+        src: ['jrex.js'],
+        dest: 'jrex.min.js',
+        options: {
+        }
+      }
   }  
 });
 
 grunt.loadNpmTasks('grunt-typescript');
+grunt.loadNpmTasks('grunt-contrib-uglify');
 
-grunt.registerTask('default', ['typescript']);
+grunt.registerTask('default', ['typescript','uglify']);
 
 };

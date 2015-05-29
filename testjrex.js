@@ -1,4 +1,4 @@
-var jRex = require('./jrex.js');
+var jRex = require('./jrex.min.js');
 var assert = require('assert');
 
 suite('jRex',function() {
