@@ -36,6 +36,12 @@ Installation
 
     npm install jrex
 
+Usage
+=====
+
+    var jRex = require('jrex');
+    jRex(...)...;
+    
 API definition
 ==============
 Patterns
