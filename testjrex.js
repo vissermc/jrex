@@ -147,6 +147,20 @@ suite('jRex',function() {
 	        jRex(/./).skip(3).index().eval('aabab'));
 	});
 	
+	test('#flags',function() {
+        assert.equal('', jRex(/./).flags());
+        assert.equal('im', jRex(/./mi).flags());
+	});
+
+	test('#regex',function() {
+        assert.deepEqual('/.?/', jRex(/.?/).regex()+'');
+        assert.deepEqual('/.*/im', jRex(/.*/mi).regex()+'');
+	});
+
+	test('#toJSON',function() {
+        assert.deepEqual({"regex":".*","flags":"im"}, jRex(/.*/mi).toJSON());
+	});
+	
 	test('#map.filter.first.map',function() {
 	    assert.deepEqual('"m4"',
 	        JSON.stringify(jRex(/a.*?e/)
