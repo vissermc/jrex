@@ -117,24 +117,34 @@ suite('jRex',function() {
 	        jRex(/!/).map(function(r) { return r.between();}).eval('a!!b!cde!!f!'));
 	});
 	
-	test('#indices',function() {
+	test('#index',function() {
 	    assert.deepEqual('[0,5,7,10]',
-	        JSON.stringify(jRex(/a(.*?)e/).indices().eval('abcdeaeabeabce')));
+	        JSON.stringify(jRex(/a(.*?)e/).index().eval('abcdeaeabeabce')));
+	});
+
+	test('#text()',function() {
+	    assert.deepEqual(['abcde','ae','abe','abce'],
+	        jRex(/a(.*?)e/).text().eval('abcdeaeabeabce'));
+	});
+
+	test('#text(1)',function() {
+	    assert.deepEqual(['bcd','','b','bc'],
+	        jRex(/a(.*?)e/).text(1).eval('abcdeaeabeabce'));
 	});
 
 	test('#while',function() {
 	    assert.deepEqual([0,1],
-	        jRex(/./).while(function(r) { return r.text()=='a';}).indices().eval('aaba'));
+	        jRex(/./).while(function(r) { return r.text()=='a';}).index().eval('aaba'));
 	});
 
 	test('#henceforth',function() {
 	    assert.deepEqual([2,3],
-	        jRex(/./).henceforth(function(r) { return r.text()=='b';}).indices().eval('aaba'));
+	        jRex(/./).henceforth(function(r) { return r.text()=='b';}).index().eval('aaba'));
 	});
 
 	test('#skip',function() {
 	    assert.deepEqual([3,4],
-	        jRex(/./).skip(3).indices().eval('aabab'));
+	        jRex(/./).skip(3).index().eval('aabab'));
 	});
 	
 	test('#map.filter.first.map',function() {

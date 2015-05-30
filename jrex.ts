@@ -45,10 +45,10 @@ class jRexNode {
 	captures(): jRexNode {
 		return this.map((r)=>r.captures());
 	}
-	texts(index): jRexNode {
+	text(index): jRexNode {
 		return this.map((r)=>r.text(index));
 	}
-	indices(): jRexNode {
+	index(): jRexNode {
 		return this.map((r)=>r.index());
 	}
 	filter(func): jRexNode {

@@ -51,10 +51,10 @@ var jRexModule;
         jRexNode.prototype.captures = function () {
             return this.map(function (r) { return r.captures(); });
         };
-        jRexNode.prototype.texts = function (index) {
+        jRexNode.prototype.text = function (index) {
             return this.map(function (r) { return r.text(index); });
         };
-        jRexNode.prototype.indices = function () {
+        jRexNode.prototype.index = function () {
             return this.map(function (r) { return r.index(); });
         };
         jRexNode.prototype.filter = function (func) {

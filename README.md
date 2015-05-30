@@ -71,25 +71,25 @@ Chain functions
 These chain/cascading methods transform and filter the results:
 
 	map( func: (result)=>any ): 
-	 	it transforms the result as specified by the function.
+	 	It transforms the result as specified by the function.
 	captures(): 
-		it transforms the result to the information as specified by the result function 'captures'.
-	texts(key?: number): 
-		it transforms the result to the text as specified by the result function 'text'.
-	indices(): 
-		it transforms the result to the text as specified by the result function 'text'.
+		Equivalent to map((r)=>r.captures()).
+	text(key?: number): 
+		Equivalent to map((r)=>r.text(key)).
+	index(): 
+		Equivalent to map((r)=>r.index()).
 	filter(func: (result)=>boolean): 
-		it filters outs all results for which the function evaluates to a falsy value.
+		It filters outs all results for which the function evaluates to a falsy value.
 	while(func: (result)=>boolean): 
-		it includes results until the fuction evaluates to a falsy value.
+		It includes results until the fuction evaluates to a falsy value.
 	henceforth(func: (result)=>boolean): 
-		it excludes results until the fuction evaluates to a truthy value.
+		It excludes results until the fuction evaluates to a truthy value.
 	skip(number): 
-		it excludes the first 'number' results.
+		It excludes the first 'number' results.
 	first(), last(): 
-		it will return either the first or last result.
+		It will return either the first or last result.
 	format(fmt: string): 
-		a string with special meaning for $&, $1...$nn, or $$. (See javascript replace function).
+		A string with special meaning for $&, $1...$nn, or $$. (See javascript replace function).
 
 When using these functions, it will always use the regular expression in 'global' mode.
 
@@ -98,23 +98,23 @@ When using these functions, it will always use the regular expression in 'global
 As long as no mapping functions is applied, the supplied result argument is an object with the following functions:
 
 	after(): string
-		returns the complete text after the match.
+		Returns the complete text after the match.
 	between(): string
-		returns the texts between this match and the previous match or beginning.
+		Returns the texts between this match and the previous match or beginning.
 	before(): string
-		returns the complete text before the match.
+		Returns the complete text before the match.
 	endIndex(): number
-		returns the character position after the match.
+		Returns the character position after the match.
 	index(): number
-		return the character position of the start of the match.
+		Return the character position of the start of the match.
 	input(): string
-		returns the complete text.
+		Returns the complete text.
 	text(key?: number): string
-		returns the captured text. If the number is 0 or falsy, it returns the whole matched text.
-	setNextSearch(pos: number): void
-		sets the character position of the next search.
+		Returns the captured text. If the number is 0 or falsy, it returns the whole matched text.
 	captures(): number[] {
-		returns the information about the captures, excluding the information about the whole matched text.
+		Returns the information about the captures, excluding the information about the whole matched text.
+	setNextSearch(pos: number): void
+		Sets the character position of the next search.
 
 End functions
 -------------
