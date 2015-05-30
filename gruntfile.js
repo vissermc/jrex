@@ -3,10 +3,12 @@ module.exports = function(grunt) {
 grunt.initConfig({
   typescript: {
     base: {
-      src: ['*.ts'],
-      dest: 'jrex.js',
+      src: ['jrex.ts'],
+        dest: '',
       options: {
-        module: 'commonjs', //or amd 
+        module: 'commonjs',
+        target: 'es5',
+        declaration: false 
       }
     }
   },

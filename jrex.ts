@@ -29,8 +29,6 @@ TODO:
 - split(text, startPos)	give error on map/captures/search/format
 */
 
-module jRexModule {
-
 class jRexNode {
 	constructor(private _parent?: jRexNode, private _iter?: (params,sub)=>any) {}
 	getIter(): (params,sub)=>any {
@@ -320,15 +318,13 @@ class RegexBuilder {
 	}
 }
 
-export function jRex(tree: any, flags?: string): any {
+function jRex(tree: any, flags?: string): any {
 	var regex = tree instanceof RegExp ?
 		new RegExp(tree,flags) :
 		new RegExp(new RegexBuilder().construct(tree),flags || ( typeof tree.flags === 'function' ? tree.flags() : tree.flags) ); 
 	return new jRexObj(regex);
 }  
 
-}
+declare var module, exports;
 
-declare var exports: any, module: any;
-
-module.exports = exports = jRexModule.jRex;
+module.exports = exports = jRex;
