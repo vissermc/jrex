@@ -48,13 +48,13 @@ Any element, including the root element being the first argument of jRex, is eit
 
 Primary fields are:
 
-- *or*: an array of elements where any of the elements matches the input string.
-- *text*: any element is treated/converted to text, and handled as defined previously. 
-- *regex*: any element being either a regular expression, treated as such but stripped of its flags, or converted to text and parsed as a regular expression, without the slashes and the flags.
-- *sub*: any sub element 
-- *any*: any character
-- *in*: match any from a collection or ranges of characters, as defined by RegExp's [...] notation, where the brackets are omitted.
-- *out*: match everything except any from a collection or ranges of charactes, as define by RegExp's [^...], where the brackets and '~' are omitted.
+- *or*: An array of elements where any of the elements matches the input string.
+- *text*: Any element is treated/converted to text, and handled as defined previously. 
+- *regex*: Any element being either a regular expression, treated as such but stripped of its flags, or converted to text and parsed as a regular expression, without the slashes and the flags.
+- *sub*: Any sub element. 
+- *any*: Any character.
+- *in*: Match any from a collection or ranges of characters, as defined by RegExp's [...] notation, where the brackets are omitted.
+- *out*: Match everything except any from a collection or ranges of charactes, as define by RegExp's [^...], where the brackets and '~' are omitted.
 
 Secondary fieds are:
 
