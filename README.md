@@ -54,7 +54,7 @@ Primary fields are:
 - *sub*: Any sub element. 
 - *any*: Any character.
 - *in*: Match any from a collection or ranges of characters, as defined by RegExp's [...] notation, where the brackets are omitted.
-- *out*: Match everything except any from a collection or ranges of charactes, as define by RegExp's [^...], where the brackets and '~' are omitted.
+- *out*: Match everything except any from a collection or ranges of charactes, as defined by RegExp's [^...], where the brackets and '^' are omitted.
 
 Secondary fieds are:
 
