@@ -31,6 +31,11 @@ evaluates to:
 
     pla<y>ing m<y> <x>ylophone
 
+Installation
+============
+
+    npm install jrex
+
 API definition
 ==============
 Patterns
