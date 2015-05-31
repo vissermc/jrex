@@ -24,6 +24,8 @@ SOFTWARE.
 -------------------------------------------------------------------------------
 
 TODO: 
+- count function
+- collect function: opposite of skip
 - test(text, startPos)	if there is at least one hit (give error on using map/captures/first/last/search,format).
 - replace(text, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
 - split(text, startPos)	give error on map/captures/search/format
@@ -64,6 +66,10 @@ class jRexNode {
 	henceforth(func): jRexNode {
 		var found;
 		return this.filter((r)=>(found || (found = func(r))));
+	}
+	collect(count: number): jRexNode {
+		var collect = count;
+		return this.while((r)=>(--collect >=0) );
 	}
 	skip(count: number): jRexNode {
 		var skip = count;

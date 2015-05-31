@@ -142,7 +142,16 @@ suite('jRex',function() {
 	        jRex(/./).henceforth(function(r) { return r.text()=='b';}).index().eval('aaba'));
 	});
 
+	test('#collect',function() {
+	    assert.deepEqual([],
+	        jRex(/./).collect(0).index().eval('aabab'));
+	    assert.deepEqual([0,1,2	],
+	        jRex(/./).collect(3).index().eval('aabab'));
+	});
+
 	test('#skip',function() {
+	    assert.deepEqual([0,1,2,3,4],
+	        jRex(/./).skip(0).index().eval('aabab'));
 	    assert.deepEqual([3,4],
 	        jRex(/./).skip(3).index().eval('aabab'));
 	});

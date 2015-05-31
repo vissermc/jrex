@@ -95,6 +95,8 @@ These chain/cascading methods transform and filter the results:
 		It includes results until the fuction evaluates to a falsy value.
 	henceforth(func: (result)=>boolean): 
 		It excludes results until the fuction evaluates to a truthy value.
+	collect(number):
+		It takes the first 'number' results and stops.
 	skip(number): 
 		It excludes the first 'number' results.
 	first(), last(): 
