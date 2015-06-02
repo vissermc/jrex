@@ -1,5 +1,6 @@
 var jRex = require('./jrex.min.js');
 var assert = require('assert');
+var _ = require('lodash');
 
 suite('jRex',function() {
 	suite('builder', function() {
@@ -60,8 +61,21 @@ suite('jRex',function() {
 	});
 	
 	test('#map',function() {
-	    assert.deepEqual('[5,2,3,4]',
-	        JSON.stringify(jRex(/a.*?e/).map(function(r) { return r.text().length; }).eval('abcdeaeabeabce')));
+	    assert.deepEqual([5,2,3,4],
+	        jRex(/a.*?e/).map(function(r) { return r.text().length; }).eval('abcdeaeabeabce'));
+	});
+
+	test('#reduce(val)',function() {
+	    assert.deepEqual(14,
+	        jRex(/a.*?e/).map(function(r) { return r.text().length; }).reduce(function(sum,val) { return sum+val; },0).eval('abcdeaeabeabce'));
+	});
+	test('#reduce(array)',function() {
+		var f=jRex(/a.*?e/).map(function(r) { return r.text().length; }).reduce(function(sum,val) { sum.push(val);return sum; },[]);
+	     _.times(2,function() { assert.deepEqual([5,2,3,4],f.eval('abcdeaeabeabce'))});
+	});
+	test('#reduce(factory)',function() {
+		var f=jRex(/a.*?e/).map(function(r) { return r.text().length; }).reduce(function(sum,val) { sum.v+=val; return sum; },function() { return {v:0}; } );
+	     _.times(2,function() { assert.deepEqual({v:14},f.eval('abcdeaeabeabce'))});
 	});
 	
 	test('#last',function() {
@@ -138,15 +152,15 @@ suite('jRex',function() {
 	});
 
 	test('#henceforth',function() {
-	    assert.deepEqual([2,3],
-	        jRex(/./).henceforth(function(r) { return r.text()=='b';}).index().eval('aaba'));
+		var f=jRex(/./).henceforth(function(r) { return r.text()=='b';}).index();
+	     _.times(2,function() { assert.deepEqual([2,3],f.eval('aaba'))});
 	});
 
 	test('#collect',function() {
 	    assert.deepEqual([],
 	        jRex(/./).collect(0).index().eval('aabab'));
-	    assert.deepEqual([0,1,2	],
-	        jRex(/./).collect(3).index().eval('aabab'));
+		var f=jRex(/./).collect(3).index();
+	    _.times(2,function() { assert.deepEqual([0,1,2],f.eval('aabab'))});
 	});
 
 	test('#skip',function() {
@@ -154,6 +168,13 @@ suite('jRex',function() {
 	        jRex(/./).skip(0).index().eval('aabab'));
 	    assert.deepEqual([3,4],
 	        jRex(/./).skip(3).index().eval('aabab'));
+	});
+
+	test('#split',function() {
+		assert.deepEqual(['a','c'],jRex(/b/).split('abc'));			
+		assert.deepEqual(['a','cbe'],jRex(/b/).first().split('abcbe'));			
+		assert.deepEqual(['a','cbe'],jRex(/b/).collect(1).split('abcbe'));			
+		assert.deepEqual(['abc','e',''],jRex(/b/).skip(1).split('abcbeb'));			
 	});
 	
 	test('#flags',function() {
@@ -168,6 +189,17 @@ suite('jRex',function() {
 
 	test('#toJSON',function() {
         assert.deepEqual({"regex":".*","flags":"im"}, jRex(/.*/mi).toJSON());
+	});
+
+	test('#map.map.skip.filter.map',function() {
+	    assert.deepEqual(['m2','m3'],
+	        jRex(/a.*?e/)
+	            .map(function(r) { return r.text().length; })
+	            .skip(1)
+				.filter(function(r) { return r<4; })
+	            .map(function(r) { return 'm'+r; })
+	            .eval('abcdeaeabeabce')
+		);
 	});
 	
 	test('#map.filter.first.map',function() {

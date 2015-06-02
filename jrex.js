@@ -57,6 +57,15 @@ var jRexNode = (function () {
     jRexNode.prototype.index = function () {
         return this.map(function (r) { return r.index(); });
     };
+    jRexNode.prototype.reduce = function (func, initialValueFactoryOrValue) {
+        var initialValueFactory = initialValueFactoryOrValue == null ? null : (typeof (initialValueFactoryOrValue) === 'function' ? initialValueFactoryOrValue : (typeof (initialValueFactoryOrValue) === 'object' ?
+            (function (j) { return function () { return JSON.parse(j); }; })(JSON.stringify(initialValueFactoryOrValue)) :
+            function () { return initialValueFactoryOrValue; }));
+        var iter = this.getIter();
+        return new jRexNode(this, initialValueFactory == null ?
+            function (params, sub) { var accu, inited; iter(params, function (r, orig) { return (accu = inited ? func(accu, r) : (inited = true, r), undefined); }); sub(accu); return true; } :
+            function (params, sub) { var accu = initialValueFactory(); iter(params, function (r, orig) { return (accu = func(accu, r), undefined); }); sub(accu); return true; });
+    };
     jRexNode.prototype.filter = function (func) {
         var iter = this.getIter();
         return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { return (func(r) ? sub(r, orig) : undefined); }); });
@@ -66,16 +75,16 @@ var jRexNode = (function () {
         return new jRexNode(this, function (params, sub) { return iter(params, function (r, orig) { return (func(r) ? sub(r, orig) : null); }); });
     };
     jRexNode.prototype.henceforth = function (func) {
-        var found;
-        return this.filter(function (r) { return (found || (found = func(r))); });
+        var iter = this.getIter();
+        return new jRexNode(this, function (params, sub) { var found; return iter(params, function (r, orig) { return (found || (found = func(r))) ? sub(r, orig) : undefined; }); });
     };
     jRexNode.prototype.collect = function (count) {
-        var collect = count;
-        return this.while(function (r) { return (--collect >= 0); });
+        var iter = this.getIter();
+        return new jRexNode(this, function (params, sub) { var collect = count; return iter(params, function (r, orig) { return (--collect >= 0) ? sub(r, orig) : null; }); });
     };
     jRexNode.prototype.skip = function (count) {
-        var skip = count;
-        return this.filter(function (r) { return (skip < 0 || --skip < 0); });
+        var iter = this.getIter();
+        return new jRexNode(this, function (params, sub) { var skip = count; return iter(params, function (r, orig) { return (skip < 0 || --skip < 0) ? sub(r, orig) : undefined; }); });
     };
     jRexNode.prototype.first = function () {
         var iter = this.getIter();
@@ -131,13 +140,13 @@ var jRexNode = (function () {
     };
     jRexNode.prototype.split = function (text, startPos) {
         var res = [];
-        var cur;
-        this.getIter()({ text: text, startPos: startPos }, function (r) {
-            res.push(r.between());
-            cur = r;
+        var index = null;
+        this.getIter()({ text: text, startPos: startPos }, function (r, orig) {
+            res.push(text.substring(index || 0, orig.index()));
+            index = orig.endIndex();
         });
-        if (cur)
-            res.push(cur.after());
+        if (index != null)
+            res.push(text.substring(index));
         return res;
     };
     return jRexNode;

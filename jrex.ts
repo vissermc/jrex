@@ -51,6 +51,22 @@ class jRexNode {
 	index(): jRexNode {
 		return this.map((r)=>r.index());
 	}
+	reduce(func:(accu: any, value: any)=>any,initialValueFactoryOrValue?: ()=>any): jRexNode {
+		var initialValueFactory = 
+			initialValueFactoryOrValue == null ? null : (
+				typeof(initialValueFactoryOrValue)==='function' ? initialValueFactoryOrValue : (
+					typeof(initialValueFactoryOrValue)==='object' ?
+						((j)=>()=>JSON.parse(j))(JSON.stringify(initialValueFactoryOrValue)) : 
+						() => initialValueFactoryOrValue
+					)
+			);
+		var iter = this.getIter();
+		return new jRexNode(this,
+			initialValueFactory == null ?
+				(params,sub)=>{ var accu, inited; iter(params,(r,orig)=>(accu = inited ? func(accu, r) : (inited=true,r),undefined)); sub(accu); return true; }:
+				(params,sub)=>{ var accu = initialValueFactory(); iter(params,(r,orig)=>(accu=func(accu, r),undefined)); sub(accu); return true; }
+		);
+	}
 	filter(func): jRexNode {
 		var iter = this.getIter();
 		return new jRexNode(this,
@@ -64,16 +80,22 @@ class jRexNode {
 		);
 	}
 	henceforth(func): jRexNode {
-		var found;
-		return this.filter((r)=>(found || (found = func(r))));
+		var iter = this.getIter();
+		return new jRexNode(this,
+			(params,sub)=>{ var found; return iter(params, (r, orig)=> (found || (found = func(r))) ? sub(r, orig) : undefined);}
+		);
 	}
 	collect(count: number): jRexNode {
-		var collect = count;
-		return this.while((r)=>(--collect >=0) );
+		var iter = this.getIter();
+		return new jRexNode(this,
+			(params,sub)=>{ var collect = count; return iter(params, (r, orig)=> (--collect >=0) ? sub(r, orig) : null);}
+		);
 	}
 	skip(count: number): jRexNode {
-		var skip = count;
-		return this.filter((r)=>(skip < 0 || --skip<0));
+		var iter = this.getIter();
+		return new jRexNode(this,
+			(params,sub)=>{ var skip = count; return iter(params, (r, orig)=> (skip < 0 || --skip<0) ? sub(r, orig) : undefined);}
+		);
 	}
 	first(): jRexNode {
 		var iter = this.getIter();
@@ -133,13 +155,13 @@ class jRexNode {
 	}
 	split(text: string, startPos?: number ): string[] {	//give error on map/captures/search/format
 		var res=[];
-		var cur;
-		this.getIter()({text:text, startPos: startPos}, (r)=>{
-			res.push(r.between());
-			cur = r;
+		var index = null;
+		this.getIter()({text:text, startPos: startPos}, (r, orig)=>{
+			res.push(text.substring(index || 0,orig.index()));
+			index = orig.endIndex();
 		});
-		if (cur)
-			res.push(cur.after());
+		if (index != null)
+			res.push(text.substring(index));
 		return res;
 	}
 }
