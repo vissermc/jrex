@@ -95,6 +95,9 @@ These chain/cascading methods transform and filter the results:
 		It includes results until the fuction evaluates to a falsy value.
 	henceforth(func: (result)=>boolean): 
 		It excludes results until the fuction evaluates to a truthy value.
+	reduce(func: (accu, value)=>accu, accuValue/accuFactoryFunc?):
+		Reduces by reiterating accu=func(accu,value). If initial value or factory function is not supplied,
+		it will use the first value as accumulator.
 	collect(number):
 		It takes the first 'number' results and stops.
 	skip(number): 
