@@ -54,6 +54,12 @@ suite('jRex',function() {
 	    assert.deepEqual('[{"index":0,"texts":["abcde","bcd"]}]',JSON.stringify(jRex(/a(.*)e/).eval('abcde')),'one result');
 	    assert.deepEqual('[{"index":0,"texts":["abcde","bcd"]},{"index":5,"texts":["ae",""]}]',JSON.stringify(jRex(/a(.*?)e/).eval('abcdeae')), 'two results');
 	});
+
+	test('#eval:startPos',function() {
+	    assert.deepEqual(2,jRex(/a/).eval('aa',0).length);
+	    assert.deepEqual(1,jRex(/a/).eval('aa',1).length);
+	    assert.deepEqual(0,jRex(/a/).eval('aa',2).length);
+	});
 	
 	test('#filter',function() {
 	    assert.deepEqual('[{"index":0,"texts":["abcde"]},{"index":10,"texts":["abce"]}]',
@@ -68,6 +74,8 @@ suite('jRex',function() {
 	test('#reduce(val)',function() {
 	    assert.deepEqual(14,
 	        jRex(/a.*?e/).map(function(r) { return r.text().length; }).reduce(function(sum,val) { return sum+val; },0).eval('abcdeaeabeabce'));
+	    assert.deepEqual(14,
+	        jRex(/a.*?e/).map(function(r) { return r.text().length; }).reduce(function(sum,val) { return sum+val; }).eval('abcdeaeabeabce'));
 	});
 	test('#reduce(array)',function() {
 		var f=jRex(/a.*?e/).map(function(r) { return r.text().length; }).reduce(function(sum,val) { sum.push(val);return sum; },[]);
@@ -82,6 +90,20 @@ suite('jRex',function() {
 	    assert.deepEqual('{"index":10,"texts":["abce"]}',
 	        JSON.stringify(jRex(/a.*?e/).last().eval('abcdeaeabeabce')));
 	});
+
+	test('#test',function() {
+	    assert.equal(true,
+	        jRex(/b/).test('abc'));
+	    assert.equal(false,
+	        jRex(/d/).test('abc'));
+	});	
+
+	test('#test:startPos',function() {
+	    assert.equal(false,
+	        jRex(/b/).test('abc',2));
+	    assert.equal(true,
+	        jRex(/c/).test('abc',2));
+	});	
 
 	test('#replace',function() {
 	    assert.deepEqual('"aBcdBf"',

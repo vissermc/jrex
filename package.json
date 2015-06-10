@@ -1,6 +1,6 @@
 {
   "name": "jrex",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Modern Javascript library for composable, iterable, lazy, and immutable regular expressions",
   "main": "jrex.js",
   "scripts": {
@@ -10,6 +10,11 @@
     "type": "git",
     "url": "https://github.com/vissermc/jrex.git"
   },
+  "files": [
+    "jrex.js",
+    "jrex.min.js",
+    "jrex.d.ts"
+  ],
   "keywords": [
     "regular",
     "expression",

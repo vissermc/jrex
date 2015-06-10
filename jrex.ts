@@ -22,13 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 -------------------------------------------------------------------------------
-
-TODO: 
-- count function
-- collect function: opposite of skip
-- test(text, startPos)	if there is at least one hit (give error on using map/captures/first/last/search,format).
-- replace(text, startPos)	A String method that executes a search for a match in a string, and replaces the matched substring with a replacement substring.
-- split(text, startPos)	give error on map/captures/search/format
 */
 
 class jRexNode {
@@ -132,7 +125,7 @@ class jRexNode {
 			}).replace(fmt);
 		return this.map(f);
 	}
-	eval(text: string, startPos: number ): any {
+	eval(text: string, startPos?: number ): any {
 		var res=[];
 		var isSingle = this.getIter()({text:text, startPos: startPos}, (r)=>{
 			res.push(r);

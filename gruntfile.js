@@ -8,7 +8,7 @@ grunt.initConfig({
       options: {
         module: 'commonjs',
         target: 'es5',
-        declaration: false 
+        declaration: true 
       }
     }
   },
