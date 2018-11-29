@@ -29,7 +29,7 @@ Example 3: text replace:
     
 evaluates to:
 
-    pla<y>ing m<y> <x>ylophone
+    playing my x<y>lophone
 
 Installation
 ============
