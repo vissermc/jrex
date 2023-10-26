@@ -33,7 +33,6 @@
     "grunt": "^1.0.3",
     "grunt-contrib-uglify": "^4.0.0",
     "grunt-typescript": "^0.6.2",
-    "lodash": "^4.17.11",
     "mocha": "^5.2.0",
     "should": "^6.0.3"
   }
